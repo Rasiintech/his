@@ -1,0 +1,379 @@
+{
+ "actions": [],
+ "creation": "2023-05-23 20:15:24.625791",
+ "default_view": "List",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "patient",
+  "column_break_jguyf",
+  "patient_name",
+  "column_break_zu1be",
+  "sex",
+  "column_break_xjat6",
+  "ref_practitioner",
+  "vitals_tab",
+  "section_break_kkzrb",
+  "view_as_chart",
+  "vitals",
+  "drug_sheet_tab",
+  "section_break_jervw",
+  "drug",
+  "lab_tab",
+  "section_break_fh0sf",
+  "lab",
+  "imaging",
+  "section_break_mown6",
+  "imaging_html",
+  "surgery_tab",
+  "section_break_zc9tv",
+  "surgery",
+  "progress_note_tab",
+  "section_break_in8mp",
+  "add_new_progress",
+  "progress_note",
+  "blood_transfusion_tab",
+  "section_break_klohb",
+  "add_new_blood",
+  "blood_transfusion",
+  "procedures_tab",
+  "section_break_fbnx9",
+  "procedures",
+  "news_action_chart_tab",
+  "section_break_lkpjl",
+  "news_action__chart",
+  "prescription_tab",
+  "section_break_nhr1l",
+  "med",
+  "history_taking_tab",
+  "section_break_wu5yw",
+  "labs_pres",
+  "fluid_chart_monitoring_tab",
+  "section_break_bhyj4",
+  "chart",
+  "note",
+  "section_break_08hoq",
+  "add_new_note",
+  "notes",
+  "instraction",
+  "section_break_nt14g",
+  "add_news",
+  "trsnote"
+ ],
+ "fields": [
+  {
+   "fieldname": "patient",
+   "fieldtype": "Link",
+   "label": "PID",
+   "options": "Patient"
+  },
+  {
+   "fieldname": "vitals_tab",
+   "fieldtype": "Tab Break",
+   "label": "Vitals"
+  },
+  {
+   "fieldname": "vitals",
+   "fieldtype": "HTML",
+   "label": "Vitals",
+   "options": "<div id=\"vitals\">  </div>"
+  },
+  {
+   "fieldname": "drug_sheet_tab",
+   "fieldtype": "Tab Break",
+   "label": "Drug Sheet"
+  },
+  {
+   "fieldname": "drug",
+   "fieldtype": "HTML",
+   "label": "drug",
+   "options": "<div id=\"drug_sheet\">  </div>"
+  },
+  {
+   "fieldname": "lab_tab",
+   "fieldtype": "Tab Break",
+   "label": "Labs"
+  },
+  {
+   "fieldname": "lab",
+   "fieldtype": "HTML",
+   "label": "lab",
+   "options": "<div id=\"labs\">  </div>"
+  },
+  {
+   "fieldname": "imaging",
+   "fieldtype": "Tab Break",
+   "label": "Imaging"
+  },
+  {
+   "fieldname": "imaging_html",
+   "fieldtype": "HTML",
+   "label": "Imaging_html",
+   "options": "<div id=\"imaging\">  </div>"
+  },
+  {
+   "fieldname": "surgery_tab",
+   "fieldtype": "Tab Break",
+   "hidden": 1,
+   "label": "Surgery"
+  },
+  {
+   "fieldname": "surgery",
+   "fieldtype": "HTML",
+   "label": "Surgery",
+   "options": "<div id=\"surgery\">  </div>"
+  },
+  {
+   "fieldname": "progress_note_tab",
+   "fieldtype": "Tab Break",
+   "label": "Progress Note"
+  },
+  {
+   "fieldname": "progress_note",
+   "fieldtype": "HTML",
+   "label": "Progress Note",
+   "options": "<div id=\"progress_note\">  </div>"
+  },
+  {
+   "fieldname": "blood_transfusion_tab",
+   "fieldtype": "Tab Break",
+   "hidden": 1,
+   "label": "Blood Transfusion"
+  },
+  {
+   "fieldname": "blood_transfusion",
+   "fieldtype": "HTML",
+   "label": "Blood Transfusion",
+   "options": "<div id=\"blood_transfusion\">  </div>"
+  },
+  {
+   "fieldname": "procedures_tab",
+   "fieldtype": "Tab Break",
+   "label": "Procedures"
+  },
+  {
+   "fieldname": "procedures",
+   "fieldtype": "HTML",
+   "label": "Procedures",
+   "options": "<div id=\"procedures\">  </div>"
+  },
+  {
+   "fieldname": "news_action__chart",
+   "fieldtype": "HTML",
+   "label": "News Action  Chart",
+   "options": "<div id=\"news_action_chart\">  </div>"
+  },
+  {
+   "fieldname": "news_action_chart_tab",
+   "fieldtype": "Tab Break",
+   "hidden": 1,
+   "label": "News Action  Chart"
+  },
+  {
+   "fieldname": "view_as_chart",
+   "fieldtype": "Button",
+   "label": "View As Chart"
+  },
+  {
+   "fieldname": "prescription_tab",
+   "fieldtype": "Tab Break",
+   "label": "Prescription"
+  },
+  {
+   "fieldname": "med",
+   "fieldtype": "HTML",
+   "label": "med",
+   "options": "<div id=\"med\">  </div>"
+  },
+  {
+   "fetch_from": "patient.first_name",
+   "fieldname": "patient_name",
+   "fieldtype": "Data",
+   "label": "Patient Name",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_jguyf",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fetch_from": "patient.sex",
+   "fieldname": "sex",
+   "fieldtype": "Link",
+   "label": "Sex",
+   "options": "Gender",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_zu1be",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "column_break_xjat6",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "add_new_progress",
+   "fieldtype": "Button",
+   "label": "Add New"
+  },
+  {
+   "fieldname": "add_new_blood",
+   "fieldtype": "Button",
+   "label": "Add New"
+  },
+  {
+   "fieldname": "history_taking_tab",
+   "fieldtype": "Tab Break",
+   "label": "Lab Prescription"
+  },
+  {
+   "fieldname": "section_break_kkzrb",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "section_break_jervw",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "section_break_fh0sf",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "section_break_mown6",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "section_break_zc9tv",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "section_break_in8mp",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "section_break_klohb",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "section_break_fbnx9",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "section_break_lkpjl",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "section_break_nhr1l",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "section_break_wu5yw",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "labs_pres",
+   "fieldtype": "HTML",
+   "label": "Labs pres",
+   "options": "<div id=\"lab_prescription\">  </div>"
+  },
+  {
+   "fieldname": "fluid_chart_monitoring_tab",
+   "fieldtype": "Tab Break",
+   "hidden": 1,
+   "label": "Fluid Chart Monitoring"
+  },
+  {
+   "fieldname": "section_break_bhyj4",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "chart",
+   "fieldtype": "HTML",
+   "label": "chart",
+   "options": "<div id=\"chart\">  </div>"
+  },
+  {
+   "fieldname": "note",
+   "fieldtype": "Tab Break",
+   "label": "Note"
+  },
+  {
+   "fieldname": "section_break_08hoq",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "notes",
+   "fieldtype": "HTML",
+   "label": "Notes",
+   "options": "<div id=\"note\">  </div>"
+  },
+  {
+   "fieldname": "instraction",
+   "fieldtype": "Tab Break",
+   "hidden": 1,
+   "label": "Instraction"
+  },
+  {
+   "fieldname": "section_break_nt14g",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "add_news",
+   "fieldtype": "Button",
+   "label": "Add New"
+  },
+  {
+   "fieldname": "trsnote",
+   "fieldtype": "HTML",
+   "label": "Instraction Note",
+   "options": "<div id=\"instraction\">  </div>"
+  },
+  {
+   "fieldname": "add_new_note",
+   "fieldtype": "Button",
+   "label": "Add New"
+  },
+  {
+   "fieldname": "ref_practitioner",
+   "fieldtype": "Link",
+   "label": "Consultant",
+   "options": "Healthcare Practitioner",
+   "read_only": 1
+  }
+ ],
+ "issingle": 1,
+ "links": [],
+ "modified": "2024-09-14 10:43:52.392242",
+ "modified_by": "Administrator",
+ "module": "HIS",
+ "name": "Patient History",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "role": "All",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "route": "ot/history",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

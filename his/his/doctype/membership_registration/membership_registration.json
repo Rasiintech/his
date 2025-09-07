@@ -1,0 +1,113 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "MR-JSH-.#####",
+ "creation": "2025-01-11 11:42:42.819001",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "date",
+  "customer_name",
+  "district_name",
+  "village",
+  "column_break_pw9hb",
+  "mobile_no",
+  "family_no",
+  "registrated_by",
+  "photo"
+ ],
+ "fields": [
+  {
+   "fieldname": "customer_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Customer Name",
+   "reqd": 1
+  },
+  {
+   "fieldname": "district_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "District Name"
+  },
+  {
+   "fieldname": "village",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Village"
+  },
+  {
+   "fieldname": "family_no",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Family No"
+  },
+  {
+   "fieldname": "column_break_pw9hb",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "registrated_by",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Registrated By",
+   "reqd": 1
+  },
+  {
+   "default": "Today",
+   "fieldname": "date",
+   "fieldtype": "Date",
+   "label": "Date"
+  },
+  {
+   "fieldname": "photo",
+   "fieldtype": "Attach Image",
+   "label": "Photo"
+  },
+  {
+   "fieldname": "mobile_no",
+   "fieldtype": "Int",
+   "label": "Mobile No.",
+   "reqd": 1
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2025-01-29 13:13:12.078154",
+ "modified_by": "Administrator",
+ "module": "HIS",
+ "name": "Membership Registration",
+ "name_case": "UPPER CASE",
+ "naming_rule": "Expression (old style)",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "All",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}
