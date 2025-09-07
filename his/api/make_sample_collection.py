@@ -3,11 +3,7 @@ def make_sample_collection(doc, method=None , items = None):
     itms= []
     if items:
         itms = items
-    else:
-    
-    
-
-   
+    else:   
         count=0
         for i in doc.items:
             if frappe.db.exists("Lab Test Template", i.item_code, cache=True):
@@ -46,20 +42,16 @@ def make_sample_collection(doc, method=None , items = None):
 @frappe.whitelist()
 def token_numebr(doc, method=None):
     if not frappe.db.get_value('Sample Collection', doc.name, "name"):
-        # if not frappe.get_doc("Patient Appointment", doc.name):
-        # prac = doc.doctor
-        # prac ="HLC-PRAC-2021-00002"
         date = doc.date
         b = frappe.db.sql(f""" select Max(token_no) as max from `tabSample Collection` where date = '{date}'  ; """ , as_dict = True)
         num = b[0]['max'] 
-        # frappe.msgprint(num)
         if num == None:
             num = 0
-        
         doc.token_no = int(num) + 1
-        # doc.appointment_time = ""
-        col = frappe.get_last_doc("Sample Collection")
-        
-        if col:
-            if col.lab_ref:
-                doc.lab_ref = int(col.lab_ref) + 1
+        last_col = frappe.db.sql("""SELECT lab_ref FROM `tabSample Collection` ORDER BY creation DESC LIMIT 1""", as_dict=True)
+        if last_col and last_col[0].get('lab_ref'):
+            doc.lab_ref = int(last_col[0]['lab_ref']) + 1
+        # col = frappe.get_last_doc("Sample Collection")
+        # if col:
+        #     if col.lab_ref:
+        #         doc.lab_ref = int(col.lab_ref) + 1

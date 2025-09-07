@@ -186,7 +186,7 @@ def add_service_items(so, doc):
                 so_item = find_or_create_item(row, so, doc)
                 so_item.item_code = item
                 so_item.qty = 1
-                so_item.rate = row.cost
+                so_item.rate = row.custom_rate
                 so_item.comments= row.lab_test_comment
 
 

@@ -28,7 +28,8 @@
   "practitioner",
   "practitioner_name",
   "medical_department",
-  "section_break_ydcki",
+  "user",
+  "full_name",
   "sb_drug_prescription",
   "section_break_bwqlu",
   "drug_prescription",
@@ -40,7 +41,6 @@
   "section_break_u3mpg",
   "select_imaging",
   "radiology_prescription",
-  "section_break_jkwaq",
   "procedure_tab",
   "section_break_vokb9",
   "procedure_prescription",
@@ -250,10 +250,6 @@
    "read_only": 1
   },
   {
-   "fieldname": "section_break_ydcki",
-   "fieldtype": "Section Break"
-  },
-  {
    "fieldname": "section_break_bwqlu",
    "fieldtype": "Section Break"
   },
@@ -275,10 +271,6 @@
    "fieldtype": "Table",
    "label": "Procedure Prescription",
    "options": "Procedure Prescription"
-  },
-  {
-   "fieldname": "section_break_jkwaq",
-   "fieldtype": "Section Break"
   },
   {
    "fieldname": "section_break_vokb9",
@@ -312,11 +304,24 @@
    "fieldname": "select_imaging",
    "fieldtype": "Button",
    "label": "Select Imaging"
+  },
+  {
+   "default": "User",
+   "fieldname": "user",
+   "fieldtype": "Link",
+   "label": "User",
+   "options": "User"
+  },
+  {
+   "fetch_from": "user.full_name",
+   "fieldname": "full_name",
+   "fieldtype": "Data",
+   "label": "Full Name"
   }
  ],
  "is_submittable": 1,
  "links": [],
- "modified": "2025-01-08 13:38:44.661815",
+ "modified": "2025-09-07 11:23:01.073170",
  "modified_by": "Administrator",
  "module": "HIS",
  "name": "Inpatient Order",
@@ -401,6 +406,7 @@
   }
  ],
  "restrict_to_domain": "Healthcare",
+ "row_format": "Dynamic",
  "search_fields": "patient, practitioner, medical_department, encounter_date, encounter_time",
  "show_name_in_global_search": 1,
  "sort_field": "modified",

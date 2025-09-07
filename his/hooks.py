@@ -175,7 +175,8 @@ doc_events = {
         
     },
     "Patient": {
-            "before_insert": ["his.api.make_uppercase.make_uppercase", "his.api.patient.age_todate"]
+            "before_insert": ["his.api.make_uppercase.make_uppercase", "his.api.patient.age_todate"],
+            "after_insert": ["his.api.patient.update_customer"]
             
     },
     # "Journal Entry" : {
