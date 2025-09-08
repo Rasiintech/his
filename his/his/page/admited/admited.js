@@ -1,13 +1,13 @@
-frappe.pages['ipd-'].on_page_load = function(wrapper) {
-	new IPD(wrapper)
+frappe.pages['admited'].on_page_load = function(wrapper) {
+		new ADM(wrapper)
 }
 
-IPD = Class.extend(
+ADM = Class.extend(
 	{
 		init:function(wrapper){
 			this.page = frappe.ui.make_app_page({
 				parent : wrapper,
-				title: "Inpatient",
+				title: "All Inpatients",
 				single_column : true
 			});
 			this.groupbyD = []
@@ -56,14 +56,14 @@ IPD = Class.extend(
 			let currdate = this.currDate
 		let tbldata = []
 		frappe.db.get_list('Inpatient Record', {
-			fields: ['patient','patient_name', 'age', 'dob', 'type', 'floor', 'room' , 'bed' , 'admitted_datetime' , 'medical_department', 'admission_practitioner' , 'diagnose'],
+			fields: ['name','patient','patient_name', 'age', 'dob', 'type' ,'room' , 'bed' , 'admitted_datetime' , 'medical_department', 'admission_practitioner' , 'diagnose'],
 			filters: {
-				"status": 'Admitted',
-				"type": "IPD"
+				"status": 'Admitted'
+			
 			},
 			limit : 1000
 		}).then(r => {
-			// console.log(r)
+			console.log(r)
 			// calculate age for each patient
 			r.forEach(row => {
 				if (row.dob) {
@@ -88,21 +88,19 @@ IPD = Class.extend(
 			{title:"No", field:"id", formatter:"rownum"},
 			{title:"PID", field:"patient" ,  headerFilter:"input"},
 			{title:"Patient Name", field:"patient_name" ,  headerFilter:"input"},
-			{title:"Age", field:"age" ,  headerFilter:"input"},
 			{title:"Type", field:"type" ,  headerFilter:"input"},
 			{title:"Date", field:"admitted_datetime" ,  headerFilter:"input"},
 			{title:"Duration", field:"duration" ,  headerFilter:"input" , formatter:durationformatter},
 			{title:"Doctor Name", field:"admission_practitioner" ,  headerFilter:"input",},
 			{title:"Medical Department", field:"medical_department" ,  headerFilter:"input",},
-			{title:"Floor", field:"floor" ,  headerFilter:"input",},
-			
-
+			// {title:"Floor", field:"floor" ,  headerFilter:"input",},
 			{title:"Room", field:"room" ,  headerFilter:"input",},
 			
 			{title:"Bed", field:"bed" ,  headerFilter:"input",},
 			// {title:"Status", field:"inpatient_status" ,  headerFilter:"input",},
 			{title:"Diagnosis", field:"diagnose" ,  headerFilter:"input",},
 			
+			{title:"Age", field:"age" ,  headerFilter:"input"},
 
 			// {title:"Action", field:"action", hozAlign:"center" , formatter:"html"},
 			
@@ -176,7 +174,7 @@ IPD = Class.extend(
 			new_data.push(row)
 		})
 		// console.log(columns)
-this.table = new Tabulator("#ipd", {
+this.table = new Tabulator("#adm", {
 			// layout:"fitDataFill",
 			layout:"fitDataStretch",
 			//  layout:"fitColumns",
@@ -252,15 +250,16 @@ this.table = new Tabulator("#ipd", {
 		   //  console.log(row.table.getSelectedData())
 		   //  row.toggle_actions_menu_button(row.table.getSelectedData().length > 0);
 		  
-		frappe.new_doc("Patient History" , {
-			patient: rows._row.data.patient , 
-			type: rows._row.data.type , 
-			consultant: rows._row.data.admission_practitioner,
-			diagnosis: rows._row.data.diagnose , 
-			floor: rows._row.data.floor , 
-			room: rows._row.data.room , 
-			bed: rows._row.data.bed,
-		})
+			frappe.new_doc("Patient History" , 
+				{
+					patient: rows._row.data.patient , 
+					consultant: rows._row.data.admission_practitioner, 
+					inpatient_record: rows._row.data.name,
+					floor: rows._row.data.floor , 
+					room: rows._row.data.room , 
+					bed: rows._row.data.bed
+
+				})
 		
 			// document.getElementById("select-stats").innerHTML = data.length;
 		  });
@@ -362,12 +361,12 @@ this.table = new Tabulator("#ipd", {
 
 	
 )
-let ipd_ = `
+let Admid = `
 
 <div class="container">
 <div class="row">
 
-<div id="ipd" style = "min-width : 100%"></div>
+<div id="adm" style = "min-width : 100%"></div>
 
 </div>
 
@@ -378,7 +377,7 @@ let ipd_ = `
 
 `
 frappe.dashbard_page = {
-	body : ipd_
+	body : Admid
 }
 
 get_history = function(patient , patient_name){
@@ -453,6 +452,14 @@ credit_sales = function(source_name){
 durationformatter = function(cell, formatterParams, onRendered){
 	return frappe.datetime.prettyDate(cell.getValue() , 1)
 }
+// let calculate_age = function(birth) {
+//     let ageMS = Date.parse(Date()) - Date.parse(birth);
+//     let age = new Date();
+//     age.setTime(ageMS);
+//     let years = age.getFullYear() - 1970;
+//     return `${years} Years(s) ${age.getMonth()} Month(s) ${age.getDate()} Day(s)`;
+// };
+
 let calculate_age = function(birth) {
     let birthDate = new Date(birth);
     let today = new Date();

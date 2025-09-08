@@ -1,4 +1,13 @@
-frappe.pages['ipd-'].on_page_load = function(wrapper) {
+// frappe.pages['neonatal-icu'].on_page_load = function(wrapper) {
+// 	var page = frappe.ui.make_app_page({
+// 		parent: wrapper,
+// 		title: 'NICU',
+// 		single_column: true
+// 	});
+// }
+
+
+frappe.pages['neonatal-icu'].on_page_load = function(wrapper) {
 	new IPD(wrapper)
 }
 
@@ -7,7 +16,7 @@ IPD = Class.extend(
 		init:function(wrapper){
 			this.page = frappe.ui.make_app_page({
 				parent : wrapper,
-				title: "Inpatient",
+				title: "NICU",
 				single_column : true
 			});
 			this.groupbyD = []
@@ -56,10 +65,10 @@ IPD = Class.extend(
 			let currdate = this.currDate
 		let tbldata = []
 		frappe.db.get_list('Inpatient Record', {
-			fields: ['patient','patient_name', 'age', 'dob', 'type', 'floor', 'room' , 'bed' , 'admitted_datetime' , 'medical_department', 'admission_practitioner' , 'diagnose'],
+			fields: ['patient','patient_name', 'age', 'dob', 'type','room' , 'bed' , 'admitted_datetime' , 'admission_practitioner' , 'diagnose'],
 			filters: {
 				"status": 'Admitted',
-				"type": "IPD"
+				"type": "NICU"
 			},
 			limit : 1000
 		}).then(r => {
@@ -93,10 +102,6 @@ IPD = Class.extend(
 			{title:"Date", field:"admitted_datetime" ,  headerFilter:"input"},
 			{title:"Duration", field:"duration" ,  headerFilter:"input" , formatter:durationformatter},
 			{title:"Doctor Name", field:"admission_practitioner" ,  headerFilter:"input",},
-			{title:"Medical Department", field:"medical_department" ,  headerFilter:"input",},
-			{title:"Floor", field:"floor" ,  headerFilter:"input",},
-			
-
 			{title:"Room", field:"room" ,  headerFilter:"input",},
 			
 			{title:"Bed", field:"bed" ,  headerFilter:"input",},
@@ -256,10 +261,9 @@ this.table = new Tabulator("#ipd", {
 			patient: rows._row.data.patient , 
 			type: rows._row.data.type , 
 			consultant: rows._row.data.admission_practitioner,
-			diagnosis: rows._row.data.diagnose , 
 			floor: rows._row.data.floor , 
 			room: rows._row.data.room , 
-			bed: rows._row.data.bed,
+			bed: rows._row.data.bed
 		})
 		
 			// document.getElementById("select-stats").innerHTML = data.length;
@@ -453,6 +457,14 @@ credit_sales = function(source_name){
 durationformatter = function(cell, formatterParams, onRendered){
 	return frappe.datetime.prettyDate(cell.getValue() , 1)
 }
+// let calculate_age = function(birth) {
+//     let ageMS = Date.parse(Date()) - Date.parse(birth);
+//     let age = new Date();
+//     age.setTime(ageMS);
+//     let years = age.getFullYear() - 1970;
+//     return `${years} Years(s) ${age.getMonth()} Month(s) ${age.getDate()} Day(s)`;
+// };
+
 let calculate_age = function(birth) {
     let birthDate = new Date(birth);
     let today = new Date();

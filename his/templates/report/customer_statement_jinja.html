@@ -362,7 +362,7 @@ margin-left: 370px; */
             
           <tr>
             <td style="width: 18%;"> {{row.posting_date }}</td>
-              <td>     {{ frappe.utils.format_time(frappe.db.get_value(row.voucher_type, row.voucher_no, "posting_time")) if frappe.db.get_value(row.voucher_type, row.voucher_no, "posting_time") else "" }}
+              <!-- <td>     {{ frappe.utils.format_time(frappe.db.get_value(row.voucher_type, row.voucher_no, "posting_time")) if frappe.db.get_value(row.voucher_type, row.voucher_no, "posting_time") else "" }} -->
               </td>
             <td> {{ frappe.db.get_value("User",frappe.db.get_value(row.voucher_type, row.voucher_no, "owner"),"full_name") }}</td> 
             

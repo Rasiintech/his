@@ -1,4 +1,4 @@
-frappe.pages['ipd-'].on_page_load = function(wrapper) {
+frappe.pages['icu-'].on_page_load = function(wrapper) {
 	new IPD(wrapper)
 }
 
@@ -7,7 +7,7 @@ IPD = Class.extend(
 		init:function(wrapper){
 			this.page = frappe.ui.make_app_page({
 				parent : wrapper,
-				title: "Inpatient",
+				title: "ICU",
 				single_column : true
 			});
 			this.groupbyD = []
@@ -56,10 +56,10 @@ IPD = Class.extend(
 			let currdate = this.currDate
 		let tbldata = []
 		frappe.db.get_list('Inpatient Record', {
-			fields: ['patient','patient_name', 'age', 'dob', 'type', 'floor', 'room' , 'bed' , 'admitted_datetime' , 'medical_department', 'admission_practitioner' , 'diagnose'],
+			fields: ['patient','patient_name', 'age', 'dob', 'type','room' , 'bed' , 'admitted_datetime' , 'medical_department','admission_practitioner' , 'diagnose'],
 			filters: {
 				"status": 'Admitted',
-				"type": "IPD"
+				"type": "ICU"
 			},
 			limit : 1000
 		}).then(r => {
@@ -94,9 +94,6 @@ IPD = Class.extend(
 			{title:"Duration", field:"duration" ,  headerFilter:"input" , formatter:durationformatter},
 			{title:"Doctor Name", field:"admission_practitioner" ,  headerFilter:"input",},
 			{title:"Medical Department", field:"medical_department" ,  headerFilter:"input",},
-			{title:"Floor", field:"floor" ,  headerFilter:"input",},
-			
-
 			{title:"Room", field:"room" ,  headerFilter:"input",},
 			
 			{title:"Bed", field:"bed" ,  headerFilter:"input",},
@@ -176,7 +173,7 @@ IPD = Class.extend(
 			new_data.push(row)
 		})
 		// console.log(columns)
-this.table = new Tabulator("#ipd", {
+this.table = new Tabulator("#icu", {
 			// layout:"fitDataFill",
 			layout:"fitDataStretch",
 			//  layout:"fitColumns",
@@ -255,11 +252,11 @@ this.table = new Tabulator("#ipd", {
 		frappe.new_doc("Patient History" , {
 			patient: rows._row.data.patient , 
 			type: rows._row.data.type , 
-			consultant: rows._row.data.admission_practitioner,
-			diagnosis: rows._row.data.diagnose , 
+			consultant: rows._row.data.admission_practitioner ,
 			floor: rows._row.data.floor , 
 			room: rows._row.data.room , 
-			bed: rows._row.data.bed,
+			bed: rows._row.data.bed
+		
 		})
 		
 			// document.getElementById("select-stats").innerHTML = data.length;
@@ -362,12 +359,12 @@ this.table = new Tabulator("#ipd", {
 
 	
 )
-let ipd_ = `
+let icu = `
 
 <div class="container">
 <div class="row">
 
-<div id="ipd" style = "min-width : 100%"></div>
+<div id="icu" style = "min-width : 100%"></div>
 
 </div>
 
@@ -378,7 +375,7 @@ let ipd_ = `
 
 `
 frappe.dashbard_page = {
-	body : ipd_
+	body : icu
 }
 
 get_history = function(patient , patient_name){

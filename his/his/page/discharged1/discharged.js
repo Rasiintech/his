@@ -1,8 +1,10 @@
-frappe.pages['ipd-'].on_page_load = function(wrapper) {
-	new IPD(wrapper)
+
+
+frappe.pages['discharged'].on_page_load = function(wrapper) {
+	new Disch(wrapper)
 }
 
-IPD = Class.extend(
+Disch = Class.extend(
 	{
 		init:function(wrapper){
 			this.page = frappe.ui.make_app_page({
@@ -56,22 +58,14 @@ IPD = Class.extend(
 			let currdate = this.currDate
 		let tbldata = []
 		frappe.db.get_list('Inpatient Record', {
-			fields: ['patient','patient_name', 'age', 'dob', 'type', 'floor', 'room' , 'bed' , 'admitted_datetime' , 'medical_department', 'admission_practitioner' , 'diagnose'],
+			fields: ['patient','patient_name', 'room' , 'bed' , 'admitted_datetime' , 'discharge_datetime' ,'admission_practitioner' ],
 			filters: {
-				"status": 'Admitted',
-				"type": "IPD"
+				status: 'Discharged'
 			},
 			limit : 1000
 		}).then(r => {
 			// console.log(r)
-			// calculate age for each patient
-			r.forEach(row => {
-				if (row.dob) {
-					row.age = calculate_age(row.dob);
-				} else {
-					row.age = "Unknown";
-				}
-			});
+			
             // code snippet
             // $(frappe.render_template(frappe.render_template('dashboard_page' ,{"data" : r.message }), me)).appendTo(me.page.main)
 			tbldata = r
@@ -88,20 +82,14 @@ IPD = Class.extend(
 			{title:"No", field:"id", formatter:"rownum"},
 			{title:"PID", field:"patient" ,  headerFilter:"input"},
 			{title:"Patient Name", field:"patient_name" ,  headerFilter:"input"},
-			{title:"Age", field:"age" ,  headerFilter:"input"},
-			{title:"Type", field:"type" ,  headerFilter:"input"},
-			{title:"Date", field:"admitted_datetime" ,  headerFilter:"input"},
-			{title:"Duration", field:"duration" ,  headerFilter:"input" , formatter:durationformatter},
+			{title:"Admitted Date", field:"admitted_datetime" ,  headerFilter:"input"},
+			{title:"Discharge Date", field:"discharge_datetime" ,  headerFilter:"input"},
 			{title:"Doctor Name", field:"admission_practitioner" ,  headerFilter:"input",},
-			{title:"Medical Department", field:"medical_department" ,  headerFilter:"input",},
-			{title:"Floor", field:"floor" ,  headerFilter:"input",},
-			
-
 			{title:"Room", field:"room" ,  headerFilter:"input",},
 			
 			{title:"Bed", field:"bed" ,  headerFilter:"input",},
-			// {title:"Status", field:"inpatient_status" ,  headerFilter:"input",},
-			{title:"Diagnosis", field:"diagnose" ,  headerFilter:"input",},
+			{title:"Status", field:"inpatient_status" ,  headerFilter:"input",},
+			{title:"Diagnose", field:"diagnose" ,  headerFilter:"input",},
 			
 
 			// {title:"Action", field:"action", hozAlign:"center" , formatter:"html"},
@@ -172,11 +160,10 @@ IPD = Class.extend(
 			// 	}
 			// }
 			row['action'] = btnhml
-			row['duration']  = row.admitted_datetime
 			new_data.push(row)
 		})
 		// console.log(columns)
-this.table = new Tabulator("#ipd", {
+this.table = new Tabulator("#discharged", {
 			// layout:"fitDataFill",
 			layout:"fitDataStretch",
 			//  layout:"fitColumns",
@@ -252,15 +239,7 @@ this.table = new Tabulator("#ipd", {
 		   //  console.log(row.table.getSelectedData())
 		   //  row.toggle_actions_menu_button(row.table.getSelectedData().length > 0);
 		  
-		frappe.new_doc("Patient History" , {
-			patient: rows._row.data.patient , 
-			type: rows._row.data.type , 
-			consultant: rows._row.data.admission_practitioner,
-			diagnosis: rows._row.data.diagnose , 
-			floor: rows._row.data.floor , 
-			room: rows._row.data.room , 
-			bed: rows._row.data.bed,
-		})
+			frappe.new_doc("Patient History" , {patient: rows._row.data.patient})
 		
 			// document.getElementById("select-stats").innerHTML = data.length;
 		  });
@@ -362,12 +341,12 @@ this.table = new Tabulator("#ipd", {
 
 	
 )
-let ipd_ = `
+let discharged = `
 
 <div class="container">
 <div class="row">
 
-<div id="ipd" style = "min-width : 100%"></div>
+<div id="discharged" style = "min-width : 100%"></div>
 
 </div>
 
@@ -378,18 +357,10 @@ let ipd_ = `
 
 `
 frappe.dashbard_page = {
-	body : ipd_
+	body : discharged
 }
 
-get_history = function(patient , patient_name){
-	alert(patient)
 
-	// frappe.route_options = { "patient" : patient };
-	// frappe.set_route('view-vital-signs');
-	frappe.set_route('Form', 'Patient History', { patient: "PID-00265" });
-
-
-}
 formatter = function(cell, formatterParams, onRendered){
 			return frappe.datetime.prettyDate(cell.getValue() , 1)
 		}
@@ -448,32 +419,3 @@ credit_sales = function(source_name){
 	
 
 }
-
-
-durationformatter = function(cell, formatterParams, onRendered){
-	return frappe.datetime.prettyDate(cell.getValue() , 1)
-}
-let calculate_age = function(birth) {
-    let birthDate = new Date(birth);
-    let today = new Date();
-
-    let years = today.getFullYear() - birthDate.getFullYear();
-    let months = today.getMonth() - birthDate.getMonth();
-    let days = today.getDate() - birthDate.getDate();
-
-    // Adjust for negative days
-    if (days < 0) {
-        months--;
-        // Get total days in previous month
-        let prevMonth = new Date(today.getFullYear(), today.getMonth(), 0);
-        days += prevMonth.getDate();
-    }
-
-    // Adjust for negative months
-    if (months < 0) {
-        years--;
-        months += 12;
-    }
-
-    return `${years} Year(s) ${months} Month(s) ${days} Day(s)`;
-};

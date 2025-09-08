@@ -7,7 +7,7 @@ from frappe import _, scrub
 from frappe.utils import cint, flt
 from six import iteritems
 
-from erpnext.accounts.party import get_partywise_advanced_payment_amount
+# from erpnext.accounts.party import get_partywise_advanced_payment_amount
 from erpnext.accounts.report.accounts_receivable.accounts_receivable import ReceivablePayableReport
 
 
@@ -38,15 +38,15 @@ class AccountReceivableSummary(ReceivablePayableReport):
 
 		self.get_party_total(args)
 
-		party_advance_amount = (
-			get_partywise_advanced_payment_amount(
-				self.party_type,
-				self.filters.report_date,
-				self.filters.show_future_payments,
-				self.filters.company,
-			)
-			or {}
-		)
+		# party_advance_amount = (
+		# 	get_partywise_advanced_payment_amount(
+		# 		self.party_type,
+		# 		self.filters.report_date,
+		# 		self.filters.show_future_payments,
+		# 		self.filters.company,
+		# 	)
+		# 	or {}
+		# )
 
 		if self.filters.show_gl_balance:
 			gl_balance_map = get_gl_balance(self.filters.report_date)
@@ -70,7 +70,7 @@ class AccountReceivableSummary(ReceivablePayableReport):
 			row.update(party_dict)
 
 			# Advance against party
-			row.advance = party_advance_amount.get(party, 0)
+			# row.advance = party_advance_amount.get(party, 0)
 
 			# In AR/AP, advance shown in paid columns,
 			# but in summary report advance shown in separate column
@@ -135,20 +135,20 @@ class AccountReceivableSummary(ReceivablePayableReport):
 			fieldname="party",
 			fieldtype="Link",
 			options=self.party_type,
-			width=180,
+			width=280,
 		)
 
 		if self.party_naming_by == "Naming Series":
-			self.add_column(_("{0} Name").format(self.party_type), fieldname="party_name", fieldtype="Data")
+			self.add_column(_("{0} Name").format(self.party_type), fieldname="party_name", fieldtype="Data",width=280)
 		
 		self.add_column(_("Responsible"), fieldname="resonsible", fieldtype="Data")
 		self.add_column(_("Mobile No"), fieldname="mobile_no", fieldtype="Data")
 		credit_debit_label = "Return" if self.party_type == "Customer" else "Debit Note"
 
 		# self.add_column(_("Advance A mount"), fieldname="advance")
-		self.add_column(_("Invoiced Amount"), fieldname="invoiced")
-		self.add_column(_("Paid Amount"), fieldname="paid")
-		self.add_column(_(credit_debit_label), fieldname="credit_note")
+		# self.add_column(_("Invoiced Amount"), fieldname="invoiced")
+		# self.add_column(_("Paid Amount"), fieldname="paid")
+		# self.add_column(_(credit_debit_label), fieldname="credit_note")
 		self.add_column(_("Balance"), fieldname="outstanding")
 		self.add_column(_("Receipt"), fieldname="receipt" , fieldtype="Data")
 		self.add_column(_("Print Statement"), fieldname="statement" , fieldtype="Data")

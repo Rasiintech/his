@@ -56,7 +56,7 @@ IPD = Class.extend(
 			
 		let tbldata = []
 		frappe.db.get_list('Inpatient Record', {
-			fields: ['name','patient','patient_name', 'room' , 'bed' , 'scheduled_date' , 'status', 'primary_practitioner', 'admission_practitioner'],
+			fields: ['name','patient','patient_name', 'room' , 'type' , 'status' ,'scheduled_date' , 'admission_practitioner', 'diagnose'],
 			filters: {
 				status: 'Admission Scheduled'
 			},
@@ -80,21 +80,12 @@ IPD = Class.extend(
 			{title:"PID", field:"patient" ,  headerFilter:"input"},
 			{title:"Patient Name", field:"patient_name" ,  headerFilter:"input"},
 			{title:"Date", field:"scheduled_date" ,  headerFilter:"input"},
-			{
-				title: "Doctor Name",
-				field: "doctor_name",
-				headerFilter: "input",
-				formatter: function(cell, formatterParams, onRendered){
-					// Display 'primary_practitioner' or fallback to 'admission_practitioner'
-					let data = cell.getData();
-					return data.primary_practitioner ? data.primary_practitioner : data.admission_practitioner;
-				}
-			},
-			{title:"Room", field:"room" ,  headerFilter:"input",},
+			{title:"Doctor Name", field:"admission_practitioner" ,  headerFilter:"input",},
+			// {title:"Room", field:"room" ,  headerFilter:"input",},
 			
-			{title:"Bed", field:"bed" ,  headerFilter:"input",},
+			{title:"Type", field:"type" ,  headerFilter:"input",},
 			{title:"Status", field:"status" ,  headerFilter:"input",},
-			
+			{title:"Diagnosis", field:"diagnose" ,  headerFilter:"input",},
 			
 
 			{title:"Action", field:"action", hozAlign:"center" , formatter:"html"},
@@ -139,7 +130,8 @@ IPD = Class.extend(
 			// if(row.status !== "Draft" && row.status !== "Cancelled" && row.status!= "Completed" ){
 			
 			btnhml += `
-			<button class='btn btn-primary ml-2' onclick = "admit('${row.name}','${row.patient }')"> Admit</button>
+			<button class='btn btn-primary ml-2' onclick = "admit('${row.name}','${row.patient }', '${row.admission_practitioner }', '${row.type }')"> Admit</button>
+			<button class='btn btn-danger ml-2' onclick = "cancel_admision('${row.name}','${row.patient }')"> Cancel</button>
 		
 			
 			`
@@ -168,8 +160,8 @@ IPD = Class.extend(
 		})
 		// console.log(columns)
 this.table = new Tabulator("#ad_sche", {
-			// layout:"fitDataFill",
-			layout:"fitDataStretch",
+			layout:"fitDataFill",
+			// layout:"fitDataStretch",
 			//  layout:"fitColumns",
 			// responsiveLayout:"collapse",
 			 rowHeight:30, 
@@ -352,7 +344,15 @@ frappe.dashbard_page = {
 	body : ScheduleAd
 }
 
+get_history = function(patient , patient_name){
+	alert(patient)
 
+	// frappe.route_options = { "patient" : patient };
+	// frappe.set_route('view-vital-signs');
+	frappe.set_route('Form', 'Patient History', { patient: "PID-00265" });
+
+
+}
 formatter = function(cell, formatterParams, onRendered){
 			return frappe.datetime.prettyDate(cell.getValue() , 1)
 		}
@@ -413,33 +413,52 @@ credit_sales = function(source_name){
 }
 
 
-function admit(inpatient_record, patient){
+
+function cancel_admision(inpatient_record, patient){
+	frappe.confirm('Are you sure you want to Cancelled?',
+    () => {
+        // action to perform if Yes is selected
+		frappe.call({
+			
+			method: 'his.api.admission_schd.cancel_admision',
+			args:{
+				
+				"inp_doc" :inpatient_record,
+			},
+			callback: function(data) {
+				frappe.msgprint("Cancelled Succesfullyss")
+				location.reload();
+
+			}
+		})
+    }, () => {
+        // action to perform if No is selected
+    })
+
+
+}
+
+function admit(inpatient_record, patient, practitioner, type){
 	// alert(patient)
 
 	let d = new frappe.ui.Dialog({
 		title: 'Enter details',
 		fields: [
-			 {
-				label: 'Type',
-				fieldname: 'type',
-				fieldtype: 'Link',
-				options :'Inpatient Type'
-			},
-			{
-				label: 'Room',
-				fieldname: 'room',
-				fieldtype: 'Link',
-				options :'Healthcare Service Unit Type'
-			}
+			{fieldtype: 'Link', label: 'Type', fieldname: 'type', options: 'Inpatient Type',reqd: 1 , default: type},
+			{fieldtype: 'Link', label: 'Room', fieldname: 'room', options: 'Healthcare Service Unit Type',reqd: 1},
+			{fieldtype: 'Link', label: 'Bed', fieldname: 'bed', options: 'Healthcare Service Unit', reqd: 1},
+			{fieldtype: 'Link', label: 'Additional Bed', fieldname: 'bed2', options: 'Healthcare Service Unit', reqd: 0, "hidden": 1},
+			{fieldtype: 'Datetime', label: 'Check In', fieldname: 'check_in', reqd: 1, default: frappe.datetime.now_datetime()}
 			   
 	
 		],
 		primary_action_label: 'Submit',
 		primary_action(values) {
+			admit_p(inpatient_record ,values.bed , patient, practitioner, values.type )
 			// alert("ok")
 				// console.log(values.room)
-			   frappe.route_options = {'room': values.room , "type" : values.type  , "inp_doc" : inpatient_record  , "patient" : patient };
-				frappe.set_route('room');
+			//    frappe.route_options = {'room': values.room , "type" : values.type  , "inp_doc" : inpatient_record  , "patient" : patient };
+			// 	frappe.set_route('room');
 			d.hide();
 		}
 	});
@@ -451,9 +470,45 @@ function admit(inpatient_record, patient){
 			}
 		};
 	};
+
+	d.fields_dict['bed'].get_query = function(){
+		return {
+			filters: {
+				'inpatient_occupancy': 1,
+				'service_unit_type':d.get_value('room'),
+				"occupancy_status": "Vacant"
+			}
+		};
+	};
 	
 	d.show();
 }
+
+function admit_p(inpatient_record, bed,patient_name, practitioner, type){
+	frappe.call({
+			
+		method: 'his.api.admit.admit_p',
+		args:{
+			
+			"inp_doc" :inpatient_record,
+			'service_unit': bed,
+			"patient":patient_name,
+			"practitioner":practitioner,
+			'type' : type
+			
+			// "is_insurance" : data.ref_insturance
+			// 'check_in': Date(),
+			// 'expected_discharge': expected_discharge
+		},
+		callback: function(data) {
+			frappe.msgprint("Admited")
+			window.location.reload();
+
+		}
+	})
+
+}
+
 
 function add_inpatient(){
 	let d = new frappe.ui.Dialog({
@@ -464,13 +519,37 @@ function add_inpatient(){
 				fieldname: 'patient',
 				fieldtype: 'Link',
 				options: 'Patient',
+				change: function () {
+                    frappe.call({
+						method: 'frappe.client.get',
+						args: {
+							doctype: 'Patient',
+							name: d.get_value("patient")
+						},
+						callback: function (data) {
+							if (data && data.message) {
+								// Set the fetched patient name in the dialog
+								d.set_value('patient_name', data.message.patient_name);
+							}
+						}
+					});
+                },
 				reqd : 1,
 				
 			},
+			{
+				label: 'Patient Name',
+				fieldname: 'patient_name',
+				fieldtype: 'Data',
+				reqd : 0,
+				fetch_from : "patient.first_name",
+				
+			},
+
 			// {
 			// 	label: 'Patient Name',
-			// 	fieldname: 'patient_name',
-			// 	fieldtype: 'Date',
+			// 	fieldname: 'diagnosis',
+			// 	fieldtype: 'Data',
 			// 	fetch_from : "patient.full_name",
 			// 	read_only : 1
 				
@@ -483,23 +562,35 @@ function add_inpatient(){
 				reqd : 1,
 				
 			},
-			
+			{
+				label: 'Diagnosis',
+				fieldname: 'diagnosis',
+				fieldtype: 'Data',
+				
+				reqd : 0,
+				
+			},
 		
 		 
 		],
 		primary_action_label: 'Submit',
 		primary_action(values) {
-			  let practitioner = d.get_value("practitioner")
-			  let patient = d.get_value("patient")
+			//   let practitioner = d.get_value("practitioner")
+			//   let patient = d.get_value("patient")
 			 
-		
+			  var args = {
+				patient: patient = d.get_value("patient"),
+				primary_practitioner :  d.get_value("practitioner"),
+                diagnosis : d.get_value('diagnosis'),
+				// admission_encounter: ""
+                
+				
+			}
 		
 				frappe.call({
-						method: "his.his.page.discharge_schaduling.inpatient.transfer", //dotted path to server method
+						method: "his.api.admission_schd.schedule_inpatient", //dotted path to server method
 						args: {
-							// "docname" : frm.doc.name,
-							"practitioner" : practitioner,
-							"patient": patient
+							args: args
 						},
 						callback: function(r) {
 							// code snippet

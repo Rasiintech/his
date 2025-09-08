@@ -60,7 +60,7 @@ def payment_re(party ,paid_amount, posting_date, company,inpatient_record= None,
     if discount:
         # frappe.errprint(type(discount))
         deductions.append({
-            "account": "50060 - Discount - " + frappe.db.get_value("Company", frappe.defaults.get_user_default("company"), "abbr"),
+            "account": "Discount - " + frappe.db.get_value("Company", frappe.defaults.get_user_default("company"), "abbr"),
             "cost_center": frappe.db.get_value("Company", frappe.defaults.get_user_default("company"), "cost_center"),
             "amount" : discount
 
