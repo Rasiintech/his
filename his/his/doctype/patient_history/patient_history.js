@@ -2,131 +2,185 @@
 // For license information, please see license.txt
 
 frappe.ui.form.on('Patient History', {
-	view_as_chart:function(frm){
-		$("#vitals").html(`<div id="vitalSignsChart"> <img src = "/files/F2.large(2).png" /></canvas>`)
-		// alert("Test")
-		// setup_chart()
-		
+	onload: function(frm) {
+		if (frm.doc.patient) {
+			frappe.db.get_doc('Patient', frm.doc.patient)
+				.then(patient_doc => {
+					let age = calculate_age(patient_doc.dob);
+					frm.set_value('age', age);
+				})
+				.catch(err => {
+					console.error("Failed to fetch patient document:", err);
+				});
+		}
+		// if (frm.doc.patient && frm.is_new()) {
+		// 	frm.save()
+		// }
 	},
+	// view_as_chart:function(frm){
+	// 	$("#vitals").html(`<div id="vitalSignsChart"> <img src = "/files/F2.large(2).png" /></canvas>`)
+	// 	// alert("Test")
+	// 	// setup_chart()
+		
+	// },
 	add_new_progress:function(frm){
 		frappe.new_doc("Progress Note", { "patient": frm.doc.patient})
 	},
-	add_new_note:function(frm){
-		frappe.new_doc("Notes", { "patient": frm.doc.patient})
+	add_new_nursing_note:function(frm){
+		frappe.new_doc("NURSES PROGRESS NOTE", { "patient": frm.doc.patient})
 	},
 	add_new_blood: function(frm){
 		frappe.new_doc("BLOOD TRANSFUSION OBSERVATION CHART", { "patient": frm.doc.patient})
+	},
+	// 
+	add_new_blood_t_f: function(frm){
+		frappe.new_doc("BLOOD TRANSFUSION FORM", { "patient": frm.doc.patient})
 	}
+	// 
 	,
 	add_history: function(frm){
 		frappe.new_doc("History Taken", { "patient": frm.doc.patient})
-	}
-	,
+	},
 	refresh: function(frm) {
-		frm.add_custom_button(__("Open History"), function(){
-		    if(frm.doc.patient){
-				frappe.call({
-					method: "his.api.p_history.get_history", //dotted path to server method
-					args : {"patient" : frm.doc.patient},
-					//  args : {"load_a" : currdate , to_date : to_date},
-					callback: function(r) {
-					
-						var x = window.open();
-						x.document.open().write(r.message);
-						
-						
-				
-					}})
-				}
-		
-			//perform desired action such as routing to new form or fetching etc.
-		  })
+
+		if (frm.doc.patient) {
+            frappe.call({
+                method: "his.api.p_history.get_history", //dotted path to server method
+                args: { "patient": frm.doc.patient },
+                //  args : {"load_a" : currdate , to_date : to_date},
+                callback: function (r) {
+                    $('#history').html(r.message)
+
+                    // console.log(window.open.document)
+                    // 	var x = window;
+                    // 	x.document.open().write(r.message);
+
+
+
+                }
+            })
+        }
 
 
 		if (frappe.user_roles.includes('Cashier')) {
-			frm.add_custom_button(__("Refer"), function(){
-				refer(frm);
-			
-				//perform desired action such as routing to new form or fetching etc.
-			  })
 			frm.add_custom_button(__("Transfer"), function(){
 				transfer_patient_dialog(frm);
 			
 				//perform desired action such as routing to new form or fetching etc.
 			  })
-			  
-			  frm.add_custom_button(__("Transfer"), function(){
-				transfer_patient_dialog(frm);
-			
-				//perform desired action such as routing to new form or fetching etc.
-			  })
+		
 			// btn.addClass('btn-danger');
-			var btn = frm.add_custom_button('Discharge', () => {
-				frappe.new_doc("Discharge Summery", { "patient": frm.doc.patient, "ref_practitioner": frm.doc.ref_practitioner, "doctor_plan": frm.doc.name })
-				//             frappe.confirm(`<strong>${frappe.session.user_fullname}</strong> Are you sure you want to Discharge patient : <strong>${frm.doc.patient_name}</strong>?`,
-				//                     () => {
-				//             frappe.call({
-				//             method: "his.api.discharge.patient_clearance", //dotted path to server method
-				//             args: {
-				//                     "patient" : frm.doc.patient,
-				//                     "practitioner" : frm.doc.ref_practitioner,
-				//                     "inpatient_record": frm.doc.inpatient_record
-				//                     },
-				//                     callback: function(r) {
-
-				//                             frappe.utils.play_sound("submit")
-				//                                 frappe.show_alert({
-				//                                     message:__('Patient '+ frm.doc.patient+" Discharge Order Successfully!!"),
-				//                                     indicator:'green',
-				//                                 }, 5);
-				//                     }
-				// });
-				//             },)
-			})
-			btn.addClass('btn-danger');
 		} 
 
-
+		if (frappe.user_roles.includes('Doctor') || frappe.user_roles.includes('Nurse')) {
+			var btn = frm.add_custom_button('Discharge', () => {
+				frappe.new_doc("Discharge Summary", { "patient": frm.doc.patient, "ref_practitioner": frm.doc.consultant, "doctor_plan": frm.doc.name })
+			
+			})
+			btn.addClass('btn-danger');
+		}
 		if (frappe.user_roles.includes('Doctor')) {
 			frm.add_custom_button(__("Ready To Surgery"), function(){
-				frappe.new_doc("Surgery Preparation", { "patient": frm.doc.patient, "consultant": frm.doc.ref_practitioner, })
+				frappe.new_doc("Surgery Preparation", { "patient": frm.doc.patient, "practitioner": frm.doc.ref_practitioner, })
 			
 				//perform desired action such as routing to new form or fetching etc.
 			  })
-			  frm.add_custom_button(__("Transfer"), function(){
-				transfer_patient_dialog(frm);
+			//   frm.add_custom_button(__("Transfer"), function(){
+			// 	transfer_patient_dialog(frm);
+			
+			// 	//perform desired action such as routing to new form or fetching etc.
+			//   }, __("IPD Forms"))
+
+			  frm.add_custom_button(__("Share to another Doctor"), function(){
+				// refer(frm);
+				let d = new frappe.ui.Dialog({
+				title: 'Refer Doctor',
+				fields: [
+					{
+						label: 'Consultant',
+						fieldname: 'practitioner',
+						fieldtype: 'Link',
+						options : "Healthcare Practitioner",
+						reqd : 1
+					},
+					{
+						label: 'Access',
+						fieldname: 'access',
+						fieldtype: 'Select',
+						options : "Give Access\nRemove Access",
+						reqd : 1
+					}
+				
+				],
+				size: 'small', // small, large, extra-large 
+				primary_action_label: 'Submit',
+				primary_action(values) {
+					d.hide();
+					// console.log()
+						// let inpatient_rec = frappe.get_doc('Inpatient Record', ip.name)
+						// inpatient_rec.ref_practitioner = "Dr Mohamed Dahir Aden"
+						// inpatient_rec.save()
+
+						frappe.call({
+							method: 'his.his.doctype.patient_history.patient_history.share',
+							args: {
+								'patient': frm.doc.patient,
+
+								'practitioner' : values.practitioner,
+								'doctype': "Inpatient Record",
+								'access': values.access
+								
+							},
+							callback: function(r) {
+								
+								// console.log(r)
+								// if (!r.exc) {
+								// 	// code snippet
+								// }
+							}
+						});
+						
+				}
+				 
+			});
+			
+			d.show();
+
 			
 				//perform desired action such as routing to new form or fetching etc.
-			  })
+			  },__("Share or Refer"))
 
 			  frm.add_custom_button(__("Refer"), function(){
 				refer(frm);
 			
 				//perform desired action such as routing to new form or fetching etc.
-			  })
-
+			  },__("Share or Refer"))
+			if (frappe.user_roles.includes('Doctor') || frappe.user_roles.includes('Nurse')) {
 			var btn = frm.add_custom_button('Discharge', () => {
-				frappe.new_doc("Discharge Summery", { "patient": frm.doc.patient, "ref_practitioner": frm.doc.ref_practitioner, "doctor_plan": frm.doc.name })
+				frappe.new_doc("Discharge Summary", { "patient": frm.doc.patient, "ref_practitioner": frm.doc.ref_practitioner, "doctor_plan": frm.doc.name })
 			
 			})
 			btn.addClass('btn-danger');
+		}
+
 		} 
 
-		if (frappe.user_roles.includes('Doctor')) {
-			var btn1 = frm.add_custom_button('Order', () => {
-				frappe.new_doc("Inpatient Order", { "patient": frm.doc.patient, "practitioner": frm.doc.ref_practitioner, "doctor_plan": frm.doc.name })
+		
+			var btn1 = frm.add_custom_button('Requests', () => {
+				frappe.new_doc("Inpatient Order", { "patient": frm.doc.patient, "practitioner": frm.doc.consultant, "source_order": "IPD" })
 		
 			})
 	
-		} 
-		if (frappe.user_roles.includes('NICU')) {
-			var btn1 = frm.add_custom_button('NICU', () => {
-				frappe.new_doc("NICU", { "patient": frm.doc.patient})
-		
-			})
 			btn1.addClass('btn-primary');
-		} 
-		if (frappe.user_roles.includes('Nurse')) {
+
+		// if (frappe.user_roles.includes('NICU')) {
+		// 	var btn1 = frm.add_custom_button('NICU', () => {
+		// 		frappe.new_doc("NICU", { "patient": frm.doc.patient})
+		
+		// 	},__("Action"))
+		// 	btn1.addClass('btn-primary');
+		// } 
+		// if (frappe.user_roles.includes('Nurse')) {
 			var btn3 = frm.add_custom_button('Vital Sign', () => {
 				frappe.new_doc("Vital Signs", { "patient": frm.doc.patient })
 		
@@ -138,24 +192,6 @@ frappe.ui.form.on('Patient History', {
 		
 			})
 			btn2.addClass('btn-danger');
-			var btn = frm.add_custom_button('Discharge', () => {
-				frappe.new_doc("Discharge Summery", { "patient": frm.doc.patient, "ref_practitioner": frm.doc.ref_practitioner, "doctor_plan": frm.doc.name })
-			
-			})
-			btn.addClass('btn-danger');
-			var btn4 = frm.add_custom_button('fluid chart', () => {
-				frappe.new_doc("fluid chart monitoring", { "patient": frm.doc.patient, "practitioner": frm.doc.ref_practitioner, "doctor_plan": frm.doc.name })
-		
-			})
-			btn4.addClass('btn-danger');
-			var btn5 = frm.add_custom_button('Diabetic chart', () => {
-				frappe.new_doc("Diabetic Chart", { "patient": frm.doc.patient, "practitioner": frm.doc.ref_practitioner, "doctor_plan": frm.doc.name })
-		
-			})
-			btn5.addClass('btn-danger');
-
-		} 
-
 
 		
 		  
@@ -303,7 +339,7 @@ function get_history(patient ,tab) {
         callback: function(r) {
            let columns =  r.message[0][tab]
 		   let data = r.message[1][tab]
-			console.log(data)
+			// console.log(data)
 		   if(tab == "labs"){
 			// alert()
 			data.forEach(element => {
@@ -327,7 +363,617 @@ function get_history(patient ,tab) {
 				setup_datatable(columns , lab_data , "date" , tab)
 			   }, 1000);
 		   }
+		   else if (tab == "doctor_progress_note"){
+			// alert()
+			let prog_htm = progress_note(data)
+			$('#doctor_progress_note').html(prog_htm)
+			// console.log(prog_htm)
+		   }
+		   else if (tab == "nursing_progress_note"){
+			// alert()
+			let prog_htm = progress_note(data)
+			$('#nursing_progress_note').html(prog_htm)
+			// console.log(prog_htm)
+		   }
+		   else if (tab == "doctor_plan"){
+			
+			let note_row = ``;
+			let note_html= ``;
+			let drug_row = ``;
+			let drug_html= ``;
+
+			let lab_html=``;
+			let lab_row =``;
+			let imaging_html=``;
+			let imaging_row =``;
+
+			let procedure_html=``;
+			let procedure_row =``;
+
+			
 		
+			frappe.db.get_doc('Doctor Plan', data[0].name)
+			.then(doc => {
+				if (doc.note){
+					doc.note.forEach((el) => {
+						note_row += `
+				
+						<tr>
+						
+						<td class="td--1">
+						  ${el.date}
+						</td> 
+						<td class="td--2">
+						  <strong>${el.by}</strong>
+						</td> 
+						
+						<td class="td--3">
+						<strong>${el.note || ""}</strong>
+					  </td> 
+					  
+						</tr>
+				
+							`;
+							
+						
+					  });
+					  if(note_row){
+						note_html += `
+						
+						<style>
+					
+					/*****************************************
+					 truncate styles
+					******************************************/
+					.table-truncate {
+					position: relative;
+					}
+					
+					.table-truncate__body {
+					position: absolute;
+					max-width: 95%;
+					white-space: nowrap;
+					overflow: hidden;         
+					text-overflow: ellipsis;
+					}
+					
+					/*****************************************
+					 just some design styles
+					*****************************progress_note*************/
+					body {
+					font-family: 'helvetica neue', 'arial', sans-serif;
+					
+					}
+					
+					table {
+					width: 100%;
+					border-collapse: collapse;
+					color: #262626;
+					background: #fff;
+					}
+					
+					
+					td {
+					padding: 15px;
+					border: 1px solid #262626;
+					}
+					
+					.td--1 {
+					width: 15%;
+					}
+					
+					.td--2 {
+					width: 10%;
+					}
+					
+					.qty {
+					width: 10%;
+					vertical-align: top;
+					}
+					.comment {
+						width: 35%;
+						vertical-align: top;
+						}
+					
+					</style>
+					<table>
+					<tr>
+					<td class="td--1" style="text-align:left; background:grey; color:white">
+					Date
+					</td> 
+					<td class="td--2" style="text-align:left; background:grey; color:white">
+					User
+					</td> 
+					<td class="td--3" style="text-align:left; background:grey; color:white">
+					Note
+					</td> 
+				
+					
+
+					
+					
+					</tr>
+					${note_row}
+					</table> 
+						`
+
+					  }
+					 
+					
+				
+				}
+
+				if (doc.drug_prescription){
+					doc.drug_prescription.forEach((el) => {
+						drug_row += `
+				
+						<tr>
+						<td class="td--1">
+						  ${el.date}
+						</td> 
+						<td class="td--1">
+						  ${el.drug_code}
+						</td> 
+						<td class="td--2">
+						  <strong>${el.dosage}</strong>
+						</td> 
+						<td class="qty">
+						${el.quantity}
+							</td>
+
+							<td class="td--4">
+						${el.period}
+							</td>
+
+							<td class="td--5">
+						${el.dosage_form}
+							</td>
+
+							<td class="comment">
+						${el.comment || ""}
+							</td>
+							
+						</tr>
+				
+							`;
+							
+						
+					  });
+					  if(drug_row){
+						drug_html += `
+						
+							<style>
+						
+						/*****************************************
+						 truncate styles
+						******************************************/
+						.table-truncate {
+						position: relative;
+						}
+						
+						.table-truncate__body {
+						position: absolute;
+						max-width: 95%;
+						white-space: nowrap;
+						overflow: hidden;         
+						text-overflow: ellipsis;
+						}
+						
+						/*****************************************
+						 just some design styles
+						*****************************progress_note*************/
+						body {
+						font-family: 'helvetica neue', 'arial', sans-serif;
+						
+						}
+						
+						table {
+						width: 100%;
+						border-collapse: collapse;
+						color: #262626;
+						background: #fff;
+						}
+						
+						
+						td {
+						padding: 15px;
+						border: 1px solid #262626;
+						}
+						
+						.td--1 {
+						width: 15%;
+						}
+						
+						.td--2 {
+						width: 10%;
+						}
+						
+						.qty {
+						width: 10%;
+						vertical-align: top;
+						}
+						.comment {
+							width: 35%;
+							vertical-align: top;
+							}
+						
+						</style>
+						<table>
+						<tr>
+						<td class="td--1" style="text-align:left; background:grey; color:white">
+						Date 
+						</td> 
+						<td class="td--1" style="text-align:left; background:grey; color:white">
+						Drug Name 
+						</td> 
+						<td class="td--2" style="text-align:left; background:grey; color:white">
+						Dosage
+						</td> 
+						<td class="qty table-truncate" style="text-align:left; background:grey; color:white">
+						Qty
+						</td>
+
+						<td class="td--4 table-truncate" style="text-align:left; background:grey; color:white">
+						Period
+						</td>
+
+						<td class="td--5 table-truncate" style="text-align:left; background:grey; color:white"> 
+						Frequency
+						</td>
+						<td class="comment table-truncate" style="text-align:left; background:grey; color:white"> 
+						Comment
+						</td>
+						
+						</tr>
+						${drug_row}
+						</table> 
+							`
+					  }
+					  
+
+				}
+
+				if (doc.lab_tests){
+					doc.lab_tests.forEach((el) => {
+						lab_row += `
+				
+						<tr>
+						
+						<td class="td--1">
+						  ${el.lab_test_code}
+						</td> 
+						<td class="td--2">
+						  <strong>1</strong>
+						</td> 
+						
+							
+						</tr>
+				
+							`;
+							
+						
+					  });
+					  if(lab_row){
+						lab_html += `
+						
+							<style>
+						
+						/*****************************************
+						 truncate styles
+						******************************************/
+						.table-truncate {
+						position: relative;
+						}
+						
+						.table-truncate__body {
+						position: absolute;
+						max-width: 95%;
+						white-space: nowrap;
+						overflow: hidden;         
+						text-overflow: ellipsis;
+						}
+						
+						/*****************************************
+						 just some design styles
+						*****************************progress_note*************/
+						body {
+						font-family: 'helvetica neue', 'arial', sans-serif;
+						
+						}
+						
+						table {
+						width: 100%;
+						border-collapse: collapse;
+						color: #262626;
+						background: #fff;
+						}
+						
+						
+						td {
+						padding: 15px;
+						border: 1px solid #262626;
+						}
+						
+						.td--1 {
+						width: 15%;
+						}
+						
+						.td--2 {
+						width: 10%;
+						}
+						
+						.qty {
+						width: 10%;
+						vertical-align: top;
+						}
+						.comment {
+							width: 35%;
+							vertical-align: top;
+							}
+						
+						</style>
+						<table>
+						<tr>
+						<td class="td--1" style="text-align:left; background:grey; color:white">
+						Test Name 
+						</td> 
+						<td class="td--2" style="text-align:left; background:grey; color:white">
+						Qty
+						</td> 
+					
+						
+
+						
+						
+						</tr>
+						${lab_row}
+						</table> 
+							`
+					  }
+					  
+
+				}
+
+				if (doc.imaging){
+					doc.imaging.forEach((el) => {
+						imaging_row += `
+				
+						<tr>
+						
+						<td class="td--1">
+						  ${el.image}
+						</td> 
+						<td class="td--2">
+						  <strong>1</strong>
+						</td> 
+						
+						<td class="td--3">
+						<strong>${el.lab_test_comment || ""}</strong>
+					  </td> 
+					  
+						</tr>
+				
+							`;
+							
+						
+					  });
+					  if(imaging_row){
+						imaging_html += `
+						
+						<style>
+					
+					/*****************************************
+					 truncate styles
+					******************************************/
+					.table-truncate {
+					position: relative;
+					}
+					
+					.table-truncate__body {
+					position: absolute;
+					max-width: 95%;
+					white-space: nowrap;
+					overflow: hidden;         
+					text-overflow: ellipsis;
+					}
+					
+					/*****************************************
+					 just some design styles
+					*****************************progress_note*************/
+					body {
+					font-family: 'helvetica neue', 'arial', sans-serif;
+					
+					}
+					
+					table {
+					width: 100%;
+					border-collapse: collapse;
+					color: #262626;
+					background: #fff;
+					}
+					
+					
+					td {
+					padding: 15px;
+					border: 1px solid #262626;
+					}
+					
+					.td--1 {
+					width: 15%;
+					}
+					
+					.td--2 {
+					width: 10%;
+					}
+					
+					.qty {
+					width: 10%;
+					vertical-align: top;
+					}
+					.comment {
+						width: 35%;
+						vertical-align: top;
+						}
+					
+					</style>
+					<table>
+					<tr>
+					<td class="td--1" style="text-align:left; background:grey; color:white">
+					Radiology Name 
+					</td> 
+					<td class="td--2" style="text-align:left; background:grey; color:white">
+					Qty
+					</td> 
+					<td class="td--3" style="text-align:left; background:grey; color:white">
+					Comment
+					</td> 
+				
+					
+
+					
+					
+					</tr>
+					${imaging_row}
+					</table> 
+						`
+
+					  }
+					 
+
+				}
+
+				if (doc.clinical_procedures){
+					doc.clinical_procedures.forEach((el) => {
+						procedure_row += `
+				
+						<tr>
+						
+						<td class="td--1">
+						  ${el.procedure}
+						</td> 
+						<td class="td--2">
+						  <strong>1</strong>
+						</td> 
+						
+						<td class="td--3">
+						<strong>${el.comments || ""}</strong>
+					  </td> 
+					  
+						</tr>
+				
+							`;
+							
+						
+					  });
+					  if(procedure_row){
+						procedure_html += `
+						
+						<style>
+					
+					/*****************************************
+					 truncate styles
+					******************************************/
+					.table-truncate {
+					position: relative;
+					}
+					
+					.table-truncate__body {
+					position: absolute;
+					max-width: 95%;
+					white-space: nowrap;
+					overflow: hidden;         
+					text-overflow: ellipsis;
+					}
+					
+					/*****************************************
+					 just some design styles
+					*****************************progress_note*************/
+					body {
+					font-family: 'helvetica neue', 'arial', sans-serif;
+					
+					}
+					
+					table {
+					width: 100%;
+					border-collapse: collapse;
+					color: #262626;
+					background: #fff;
+					}
+					
+					
+					td {
+					padding: 15px;
+					border: 1px solid #262626;
+					}
+					
+					.td--1 {
+					width: 15%;
+					}
+					
+					.td--2 {
+					width: 10%;
+					}
+					
+					.qty {
+					width: 10%;
+					vertical-align: top;
+					}
+					.comment {
+						width: 35%;
+						vertical-align: top;
+						}
+					
+					</style>
+					<table>
+					<tr>
+					<td class="td--1" style="text-align:left; background:grey; color:white">
+					Procedure Name 
+					</td> 
+					<td class="td--2" style="text-align:left; background:grey; color:white">
+					Qty
+					</td> 
+					<td class="td--3" style="text-align:left; background:grey; color:white">
+					Comment
+					</td> 
+				
+					
+
+					
+					
+					</tr>
+					${procedure_row}
+					</table> 
+						`
+
+					  }
+					 
+
+				}
+				// console.log(note_html)
+				// return note_html
+				
+				$('#procedure_doctor_plan').html(imaging_html)
+				$('#image_doctor_plan').html(imaging_html)
+
+				$('#lab_doctor_plan').html(lab_html)
+				
+				$('#drug_doctor_plan').html(drug_html)
+				$('#doctor_note').html(note_html)
+			})
+			
+			// setTimeout(() => {
+			// 	let notes = doctorplan(data);
+			// 	$('#doctor_note').html(notes)
+			// 	console.log(notes)
+			//   }, 5000);
+			
+			// setTimeout(() => {
+				
+			 
+			  
+			
+			
+		   }
 			else{
 			if(columns){
 			
@@ -338,6 +984,7 @@ function get_history(patient ,tab) {
 				setup_datatable([] , [] , "date", tab)
 
 			}
+			
 		}
         }})
 
@@ -418,6 +1065,8 @@ function get_history(patient ,tab) {
 }
 
 function setup_datatable(columns , data , group , tabid){
+	
+	let doctypes = {"vitals" : "Vital Signs" , "drug_sheet" :"Inpatient Medication" , "imaging" : "Radiology" , "operation" : "Clinical Procedure" , "blood_transfusion" : "Inpatient Order"}  
 	// console.log(data)
 
 	// alert(tabid)
@@ -426,7 +1075,7 @@ function setup_datatable(columns , data , group , tabid){
 		groupBy.push(group)
 	}
 
-	this.table = new Tabulator(`#${tabid}`, {
+	let table = new Tabulator(`#${tabid}`, {
 		// layout:"fitDataFill",
 		layout:"fitDataFill",
 		//  layout:"fitColumns",
@@ -477,6 +1126,12 @@ function setup_datatable(columns , data , group , tabid){
 		 
 		 data: data
 	 });
+	 let row = this
+	 table.on("rowClick", function(e ,rows){
+	
+		
+		 frappe.set_route("Form" ,doctypes[tabid] ,  rows._row.data.sr)
+	   });
 }
 
 let transfer_patient_dialog = function(frm) {
@@ -490,6 +1145,7 @@ let transfer_patient_dialog = function(frm) {
 				title: 'Transfer Patient',
 				width: 100,
 				fields: [
+					{fieldtype: 'Link', label: 'Inpatient Type', fieldname: 'inpatient_type', default: ip.type, options: 'Inpatient Type', reqd: 1, read_only:0},
 					{fieldtype: 'Link', label: 'Leave From', fieldname: 'leave_from', options: 'Healthcare Service Unit', reqd: 1, read_only:1},
 					{fieldtype: 'Link', label: 'Service Unit Type', fieldname: 'service_unit_type', options: 'Healthcare Service Unit Type'},
 					{fieldtype: 'Link', label: 'Transfer To', fieldname: 'service_unit', options: 'Healthcare Service Unit', reqd: 1},
@@ -500,6 +1156,7 @@ let transfer_patient_dialog = function(frm) {
 					let service_unit = null;
 					let check_in = dialog.get_value('check_in');
 					let leave_from = null;
+					let in_type = dialog.get_value('inpatient_type');
 					
 					if(dialog.get_value('leave_from')){
 						leave_from = dialog.get_value('leave_from');
@@ -523,7 +1180,8 @@ let transfer_patient_dialog = function(frm) {
 							'self' : ip.name,
 							'service_unit': service_unit,
 							'check_in': check_in,
-							'leave_from': leave_from
+							'leave_from': leave_from,
+							"inpatient_type": in_type
 						},
 						callback: function(data) {
 				
@@ -533,8 +1191,10 @@ let transfer_patient_dialog = function(frm) {
 								let ip_room = room.message.service_unit_type
 								let bed = room.message.name
 
-								frappe.db.set_value("Inpatient Record" , ip.name , {"bed" : bed ,"room" : ip_room })
+								// frappe.db.set_value("Inpatient Record" , ip.name , {"bed" : bed ,"room" : ip_room })
 								// frappe.db.set_value("Inpatient Record" , ip.name , "room" , ip_room)
+								// frappe.db.set_value("Inpatient Record" , ip.name , "type" , dialog.get_value('inpatient_type'))
+
 								
 								// ip.bed = service_unit
 								// ip.save()
@@ -639,7 +1299,7 @@ let refer = function(frm) {
 							},
 							callback: function(r) {
 								
-								console.log(r)
+								// console.log(r)
 								// if (!r.exc) {
 								// 	// code snippet
 								// }
@@ -657,3 +1317,225 @@ let refer = function(frm) {
 		
 	})
 }
+
+
+
+function progress_note(data){
+	// console.log(data)
+	let row = ``
+	data.forEach( d => {
+
+		row += `
+		
+		<tr>
+		<td class="td--1">
+		  <strong>${d.date}</strong>
+		</td> 
+		<td class="td--2">
+		  ${d.user}
+		</td> 
+		<td class="td--3">
+		${d.note}
+			</td>
+		</tr>
+
+		`
+		
+	})
+	let html = `
+	
+	<style>
+  
+  /*****************************************
+ truncate styles
+******************************************/
+.table-truncate {
+   position: relative;
+}
+
+.table-truncate__body {
+  position: absolute;
+  max-width: 95%;
+  white-space: nowrap;
+  overflow: hidden;         
+  text-overflow: ellipsis;
+}
+
+/*****************************************
+ just some design styles
+*****************************progress_note*************/
+body {
+  font-family: 'helvetica neue', 'arial', sans-serif;
+
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  color: #262626;
+  background: #fff;
+}
+
+td {
+  padding: 15px;
+  border: 1px solid #262626;
+}
+
+.td--1 {
+  width: 15%;
+}
+
+.td--2 {
+  width: 10%;
+}
+
+.td--3 {
+  width: 50%;
+  vertical-align: top;
+}
+</style>
+<table>
+<tr>
+<td class="td--1">
+  Date 
+</td> 
+<td class="td--2">
+  User
+</td> 
+<td class="td--3 table-truncate">
+ Note
+</td>
+</tr>
+ ${row}
+</table> 
+	`
+
+	return html
+}
+
+
+
+function doctorplan(data){
+	let note_row = ``;
+	let note_html= ``;
+
+	frappe.db.get_doc('Doctor Plan', data[0].name)
+    .then(doc => {
+		if (doc.comment){
+			
+			// alert(doc.comment)
+			
+			note_row += `
+		
+		<tr>
+		<td class="td--1">
+		  <strong>${frappe.session.user}</strong>
+		</td> 
+		<td class="td--2">
+		  ${doc.date}
+		</td> 
+		<td class="td--3">
+		${doc.comment}
+			</td>
+		</tr>
+
+			`;
+			note_html += `
+		
+			<style>
+		
+		/*****************************************
+		 truncate styles
+		******************************************/
+		.table-truncate {
+		position: relative;
+		}
+		
+		.table-truncate__body {
+		position: absolute;
+		max-width: 95%;
+		white-space: nowrap;
+		overflow: hidden;         
+		text-overflow: ellipsis;
+		}
+		
+		/*****************************************
+		 just some design styles
+		*****************************progress_note*************/
+		body {
+		font-family: 'helvetica neue', 'arial', sans-serif;
+		
+		}
+		
+		table {
+		width: 100%;
+		border-collapse: collapse;
+		color: #262626;
+		background: #fff;
+		}
+		
+		td {
+		padding: 15px;
+		border: 1px solid #262626;
+		}
+		
+		.td--1 {
+		width: 15%;
+		}
+		
+		.td--2 {
+		width: 10%;
+		}
+		
+		.td--3 {
+		width: 50%;
+		vertical-align: top;
+		}
+		</style>
+		<table>
+		<tr>
+		<td class="td--1">
+		Date 
+		</td> 
+		<td class="td--2">
+		User
+		</td> 
+		<td class="td--3 table-truncate">
+		Note
+		</td>
+		</tr>
+		${note_row}
+		</table> 
+			`
+		
+		}
+		// console.log(note_html)
+		return note_html
+    })
+	
+		
+}
+let calculate_age = function(birth) {
+    let birthDate = new Date(birth);
+    let today = new Date();
+
+    let years = today.getFullYear() - birthDate.getFullYear();
+    let months = today.getMonth() - birthDate.getMonth();
+    let days = today.getDate() - birthDate.getDate();
+
+    // Adjust for negative days
+    if (days < 0) {
+        months--;
+        // Get total days in previous month
+        let prevMonth = new Date(today.getFullYear(), today.getMonth(), 0);
+        days += prevMonth.getDate();
+    }
+
+    // Adjust for negative months
+    if (months < 0) {
+        years--;
+        months += 12;
+    }
+
+    return `${years} Year(s) ${months} Month(s) ${days} Day(s)`;
+};

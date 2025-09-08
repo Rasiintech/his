@@ -6,6 +6,7 @@
  "editable_grid": 1,
  "engine": "InnoDB",
  "field_order": [
+  "patient",
   "name_of_patient",
   "age",
   "type_of_blood",
@@ -104,12 +105,18 @@
    "options": "BLOOD TRANSFUSION OBSERVATION CHART",
    "print_hide": 1,
    "read_only": 1
+  },
+  {
+   "fieldname": "patient",
+   "fieldtype": "Link",
+   "label": "Patient",
+   "options": "Patient"
   }
  ],
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2023-06-18 09:35:59.868917",
+ "modified": "2025-09-08 14:24:46.124358",
  "modified_by": "Administrator",
  "module": "HIS",
  "name": "BLOOD TRANSFUSION OBSERVATION CHART",
@@ -154,6 +161,7 @@
    "write": 1
   }
  ],
+ "row_format": "Dynamic",
  "sort_field": "modified",
  "sort_order": "DESC",
  "states": []

@@ -1,6 +1,5 @@
 {
  "actions": [],
- "allow_rename": 1,
  "autoname": "DP-.##### ",
  "creation": "2022-04-09 11:43:47.248297",
  "doctype": "DocType",
@@ -19,12 +18,14 @@
   "to_date",
   "bed",
   "history_tab",
+  "section_break_gf20p",
   "history",
   "physical_eximinition",
   "complain",
   "diagnosis",
   "consultation_doctor",
-  "progress_note_tab",
+  "notes_tab",
+  "section_break_llaxt",
   "note",
   "ipd_drug_prescription_tab",
   "section_break_4",
@@ -33,7 +34,7 @@
   "section_break_6",
   "lab_tests",
   "imaging_tab",
-  "section_break_ggqcm",
+  "section_break_nfdbb",
   "imaging",
   "ipd_procedure_prescription_tab",
   "section_break_8",
@@ -44,7 +45,6 @@
   "discharge_tab",
   "medication_so",
   "services_so",
-  "inpatient_order",
   "status",
   "amended_from"
  ],
@@ -64,8 +64,9 @@
    "fieldtype": "Column Break"
   },
   {
+   "default": "Today",
    "fieldname": "date",
-   "fieldtype": "Data",
+   "fieldtype": "Date",
    "in_list_view": 1,
    "label": "From Date",
    "reqd": 1
@@ -77,7 +78,7 @@
   {
    "fieldname": "drug_prescription",
    "fieldtype": "Table",
-   "label": "Drug Prescription",
+   "label": "Treatment Plan",
    "options": "IPD Drug Prescription"
   },
   {
@@ -87,7 +88,7 @@
   {
    "fieldname": "lab_tests",
    "fieldtype": "Table",
-   "label": "Lab Prescription",
+   "label": "Investigation",
    "options": "IPD Lab Prescription"
   },
   {
@@ -142,6 +143,7 @@
   {
    "fieldname": "ref_practitioner",
    "fieldtype": "Link",
+   "ignore_user_permissions": 1,
    "in_global_search": 1,
    "in_list_view": 1,
    "label": "Referring Practitioner",
@@ -150,17 +152,17 @@
   {
    "fieldname": "ipd_drug_prescription_tab",
    "fieldtype": "Tab Break",
-   "label": "Drug Prescription"
+   "label": "Treatment Plan"
   },
   {
    "fieldname": "ipd_lab_prescription_tab",
    "fieldtype": "Tab Break",
-   "label": "Lab Prescription"
+   "label": "Investigation"
   },
   {
    "fieldname": "ipd_procedure_prescription_tab",
    "fieldtype": "Tab Break",
-   "label": "Procedure Prescription"
+   "label": "Procedure"
   },
   {
    "fieldname": "comment",
@@ -210,13 +212,6 @@
    "options": "Sales Order"
   },
   {
-   "fieldname": "inpatient_order",
-   "fieldtype": "Link",
-   "label": "Inpatient Order",
-   "options": "Inpatient Order",
-   "read_only": 1
-  },
-  {
    "fieldname": "status",
    "fieldtype": "Data",
    "label": "Status"
@@ -259,11 +254,12 @@
   {
    "fieldname": "consultation_doctor",
    "fieldtype": "Small Text",
+   "hidden": 1,
    "label": "Consultation Doctor"
   },
   {
    "fieldname": "history",
-   "fieldtype": "Data",
+   "fieldtype": "Small Text",
    "label": "History"
   },
   {
@@ -272,25 +268,34 @@
    "label": "Physical Eximinition"
   },
   {
-   "fieldname": "progress_note_tab",
-   "fieldtype": "Tab Break",
-   "label": "Progress Note"
-  },
-  {
    "fieldname": "note",
    "fieldtype": "Table",
    "label": "Note",
    "options": "Progress Note Table"
   },
   {
-   "fieldname": "section_break_ggqcm",
+   "fieldname": "section_break_nfdbb",
    "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "section_break_gf20p",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "section_break_llaxt",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "notes_tab",
+   "fieldtype": "Tab Break",
+   "label": "Notes"
   }
  ],
+ "in_create": 1,
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2024-09-11 09:25:19.346635",
+ "modified": "2025-09-05 17:11:25.580745",
  "modified_by": "Administrator",
  "module": "HIS",
  "name": "Doctor Plan",
@@ -298,9 +303,6 @@
  "owner": "Administrator",
  "permissions": [
   {
-   "amend": 1,
-   "cancel": 1,
-   "create": 1,
    "email": 1,
    "export": 1,
    "print": 1,
@@ -309,7 +311,6 @@
    "role": "Healthcare Administrator",
    "select": 1,
    "share": 1,
-   "submit": 1,
    "write": 1
   },
   {
@@ -323,10 +324,10 @@
    "role": "System Manager",
    "select": 1,
    "share": 1,
+   "submit": 1,
    "write": 1
   },
   {
-   "create": 1,
    "email": 1,
    "export": 1,
    "print": 1,
@@ -336,9 +337,48 @@
    "select": 1,
    "share": 1,
    "write": 1
+  },
+  {
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Physician",
+   "select": 1,
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Cashier",
+   "select": 1,
+   "share": 1,
+   "submit": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Cashiers",
+   "select": 1,
+   "share": 1,
+   "submit": 1,
+   "write": 1
   }
  ],
+ "read_only": 1,
  "sort_field": "modified",
  "sort_order": "DESC",
- "states": []
+ "states": [],
+ "track_changes": 1
 }

@@ -14,18 +14,27 @@ def get_p_histy(patient = ""):
     diag = diag_h(patient)
     imaging = imaging_h(patient)
     drug_sheet = drug_sheets(patient)
-    progress_note  = progress_no(patient)
+    doctor_progress_note  = progress_no(patient)
+    nursing_progress_note  = progress_note(patient)
     procedures = pro(patient)
-    news_action__chart = note_h(patient)
+    news_action__chart = news(patient)
     lab_prescription=lab_pres_h(patient)
+    doctor_plan  = plan(patient)
        
     vitals_cur = vitals_h(patient ,  True)
     labs_today = lab_h(patient , True)
     images  = imaging_h(patient , True)
-    note  = note_h(patient)
-    all_his =  [visits , vitals , labs , med , comp , diag , imaging , vitals_cur , labs_today ,images , drug_sheet , progress_note , procedures , news_action__chart , lab_prescription,drug_pres, note]
+    operation = surgery_h(patient)
+    blood_transfusion = get_blood_transfusion(patient)
+    dental_plan = get_dental_plan(patient)
+
+
+    # docplan  = doc_plan(patient)
+
+    
+    all_his =  [visits , vitals , labs , med , comp , diag , imaging , vitals_cur , labs_today ,images , drug_sheet , doctor_progress_note , nursing_progress_note, doctor_plan  , lab_prescription,drug_pres , operation , blood_transfusion, dental_plan]
     data = {}
-    all_his_key =  ["visits" , "vitals" , "labs" , "med" , "comp" , "diag" , "imaging" , "vitals_cur" , "labs_today" ,"images" ,"drug_sheet" , "progress_note" , "procedures" , "news_action__chart" , "lab_prescription","drug_pres", "note"]
+    all_his_key =  ["visits" , "vitals" , "labs" , "med" , "comp" , "diag" , "imaging" , "vitals_cur" , "labs_today" ,"images" ,"drug_sheet" , "doctor_progress_note" , "nursing_progress_note", "doctor_plan" , "lab_prescription","drug_pres" , "operation" ,  "blood_transfusion", "dental_plan"]
     columns = {}
     for   index , history in enumerate(all_his):
         # frappe.errprint(history)
@@ -51,19 +60,62 @@ def get_p_histy(patient = ""):
     return columns, data
 
 
+
 @frappe.whitelist()
-def note_h(patient):
+def get_blood_transfusion(patient):
+     
+    data = frappe.db.sql(f""" 
+    
+    select    date as Date , 
+    type_of_blood as  `Type of Blood`,
+    started_by as `Started By`
+    from `tabBLOOD TRANSFUSION OBSERVATION CHART`
+
+ 
+    where patient = "{patient}"
+   
+    
+    """ , as_dict = True)
+    return data
+
+@frappe.whitelist()
+def get_dental_plan(patient):
+     
+    data = frappe.db.sql(f""" 
+    
+    SELECT   
+        p.name AS sr, 
+        p.date AS Date, 
+    
+        p.treatment_status AS Status,
+        p.total as Total,
+         p.discount AS Discount,
+        p.grand_total AS "Net Total",
+       
+        p.agreed_fee AS Agreed
+      
+    FROM  `tabDental Plan` p
+    WHERE p.patient = "{patient}";
+
+   
+    
+    """ , as_dict = True)
+    return data
+
+@frappe.whitelist()
+def news(patient):
  
     data = frappe.db.sql(f""" 
     
     select    date as Date , 
-    patient as  `Patient`,
-    patient_name as `Patient Name` ,
-    note as `Note`,
-    full_name as `User`
+    time as  `time`,
+    news as `News` ,
+    action as `Action`,
+    reassessment_time as `Reassessment Time`,
+    is_the_action_working as `Is The Action Working`
   
   
-    from `tabNotes`
+    from `tabNews Action Summery Chart`
  
     where patient = "{patient}"
    
@@ -72,19 +124,19 @@ def note_h(patient):
     return data
 
 
+
 @frappe.whitelist()
 def pro(patient):
  
     data = frappe.db.sql(f""" 
     
-    select    start_date as Date , 
-    start_time as "Start Time",
-    end_time as "End Time",
-    procedure_template as  `Procedure`,
-    practitioner as `Doctor` 
-   
+    select    date as Date , 
+    type_of_procedure as  `Type of Procedure`,
+    practitioner as `Ordered by` ,
+    carried_out_by as `Carried out by`,
+    comment as Comment
   
-    from `tabClinical Procedure`
+    from `tabProcedures`
  
     where patient= "{patient}"
    
@@ -107,27 +159,46 @@ def progress_no(patient):
     from `tabProgress Note`
  
     where patient= "{patient}"
-   
+    ORDER BY date DESC
     
     """ , as_dict = True)
     return data
 
+@frappe.whitelist()
+def progress_note(patient):
+ 
+    data = frappe.db.sql(f""" 
+    
+    select    date as Date , 
+    practitioner as Doctor ,
+    note as Note,
+    full_name as User
+    from `tabNURSES PROGRESS NOTE`
+ 
+    where patient= "{patient}"
+    ORDER BY date DESC
+    
+    """ , as_dict = True)
+    return data
 
 @frappe.whitelist()
 def drug_sheets(patient):
  
     data = frappe.db.sql(f""" 
     
-    select    c.date  as Date, 
+    select   
+    p.name as sr, 
+     c.date  as Date, 
     c.time as Time , c.drug  as Drug, 
     c.type as `Root`,
      c.quantity as QTY ,
+    
      p.nurse_name as Nurse
      from `tabTreatment Sheet` c
      left join `tabInpatient Medication` p
     on c.parent = p.name  
     where p.patient= "{patient}"
-   
+   Order by date DESC
     
     """ , as_dict = True)
     return data
@@ -139,15 +210,15 @@ def vitals_h(patient , curr_date = False):
         condition += 'and signs_date = current_date()'
     data = frappe.db.sql(f""" 
     
-    select    signs_date  as Date, 
+    select name as sr,   signs_date  as Date, 
     signs_time as Time ,
             temperature as Tem, pulse  as Pulse,
         bp_systolic as 'BP systolic', bp_diastolic as 'BP Diastolic',respiratory_rate as RR,
-         spo as SoP2,
+         spo as SPO2,
+                       
          blood_sugar as `Blood Sugar`,
-        bmi as BMI ,
-        weight_status as Status,
-        
+         height as Height,
+         weight as Weight,  
        owner as `Nurse`
         from `tabVital Signs` where patient ='{patient}' {condition} Order by modified desc
    
@@ -162,6 +233,7 @@ def visits_h(patient ):
     data = frappe.db.sql(f""" 
     
     select  
+    name as sr, 
         date as Date,
     name  as `Visit No`,
    
@@ -180,14 +252,14 @@ def medic_h(patient ):
     #  appointment_date  as Date,
     data = frappe.db.sql(f""" 
     
-     select    p.encounter_date  as Date, 
+     select p.name as sr,    p.encounter_date  as Date, 
      c.drug_code  as Drug, 
       c.qty as QTY ,
     c.dosage as `Dosage`,
-    c.root_type as Root,
+
     
      p.full_name as Ordered
-     from `tabNurse Drug Prescription` c
+     from `tabDrug Prescription` c
      left join `tabInpatient Order` p
     on c.parent = p.name    
       where p.patient = "{patient}" order by p.encounter_date DESC
@@ -217,7 +289,7 @@ def medic_hh(patient ):
     data = frappe.db.sql(f""" 
     
     select 
-    
+    p.name as sr, 
     d.drug_name  as drug, 
     d.dosage  as frequecny,
     d.period  as preriod ,
@@ -279,7 +351,7 @@ def medic_hh(patient ):
             drug_pre_list.append(drug_pre)    
 
 
-    frappe.errprint(data)
+    # frappe.errprint(data)
     return data
 
 
@@ -289,15 +361,9 @@ def comp_h(patient ):
     data = frappe.db.sql(f""" 
   
    select
+   p.name as sr, 
       p.encounter_date  as Date, 
       p.cheif_complaint as Complaint , 
-      p.history_of_present_illness as HPI,
-      p.past_medical_history as "Past Medical",
-      p.differential__diagnosis as Diagnosis,
-    p.social_history_aaa as "Social",
-    p.family_history as "Family",
-    p.physical_examinationzzzzzzzzzzzs as "Physical",
-    p.drug_history as "Drug History",
    
 
    p.practitioner as Doctor
@@ -325,6 +391,7 @@ def diag_h(patient):
     data = frappe.db.sql(f""" 
     
    select 
+   p.name as sr, 
    p.encounter_date as Date , 
    c.diagnosis as  Diagnosis , 
    
@@ -343,6 +410,7 @@ def lab_h(patient , curr_date = False):
     condition = ''
     if curr_date:
         condition += 'and date = current_date()'
+    condition += ' and docstatus != 2' 
     data = frappe.db.sql(f""" 
 
     
@@ -352,7 +420,7 @@ def lab_h(patient , curr_date = False):
             name
             from `tabLab Result`
             where patient = "{patient}"  {condition}
-            order by date
+            order by date desc
 
 
          
@@ -395,13 +463,18 @@ def surgery_h(patient):
     data = frappe.db.sql(f""" 
     
             select 
+            name as sr, 
              start_date as Date,  
-           procedure_template as Procedure,
+           procedure_template as `Operation Name`,
            
-           practitioner as Doctor,
-     
+           practitioner as Doctor
           
-           status
+          
+      
+          
+           
+          
+        
            from `tabClinical Procedure`
             where patient = "{patient}";
 
@@ -417,18 +490,19 @@ def imaging_h(patient , curr_date = False):
     data = frappe.db.sql(f""" 
     
             select 
+            name as sr, 
             date as Date,
-            name,
+         
             practitioner as Doctor,
         
            eximination  as Eximination, 
-           indication as Indication ,
+           indication as Indication 
             
-           conclusion as Conclusion,
-           findings as Findings
+        
            from `tabRadiology`
-            where patient = "{patient}"  {condition};
+            where patient = "{patient}"  {condition}
 
+            order by date desc
         """ , as_dict = True)
     return data
 
@@ -447,6 +521,16 @@ def finalize(docname):
 @frappe.whitelist()
 def delete_childoc_row(doctype , docname):
     frappe.delete_doc(doctype ,docname )
+@frappe.whitelist()
+def plan(patient):
+#  doc_plan = frappe.db.get_value("Doctor Plan" , {"patient": patient, "docstatus": 0}, "name")
+    doc_plan = frappe.db.sql(f"""
+    select name from `tabDoctor Plan` where patient='{patient}' and docstatus=0
+
+    """, as_dict = 1)
+
+    return doc_plan
+
 
 
 
