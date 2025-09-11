@@ -90,6 +90,7 @@ def create_que_order_bill(doc):
             "cost_center": cost_center,
             "so_type": "Cashiers",
             "transaction_date" : doc.date,
+            "delivery_date": doc.date,
             "customer": customer,
             "patient" : doc.patient,
         
