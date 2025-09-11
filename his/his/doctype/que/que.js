@@ -50,6 +50,123 @@ frappe.ui.form.on('Que', {
        
             //   frm.set_value("messege","?");
             if (frm.doc.status=="Open") {
+                var refer_btn = frm.add_custom_button(__("Refer To Another Doctor"), function () {
+                    frappe.confirm('Are you sure you want to Refer?',
+                        () => {
+                            let submitted = false;  // Flag to prevent multiple submits
+            
+                            let d = new frappe.ui.Dialog({
+                                title: 'Referring To Doctor',
+                                fields: [
+                                    {
+                                        label: 'To Consultant',
+                                        fieldname: 'practitioner',
+                                        fieldtype: 'Link',
+                                        options: "Healthcare Practitioner",
+                                        reqd: 1,
+                                        change: function () {
+                                            let practitioner = d.get_value('practitioner');
+                                            if (practitioner) {
+                                                frappe.db.get_value('Healthcare Practitioner', practitioner, 'op_consulting_charge')
+                                                    .then(r => {
+                                                        if (r.message) {
+                                                            d.set_value('amount', r.message.op_consulting_charge || 0);
+                                                            d.set_value('paid_amount', r.message.op_consulting_charge || 0);
+                                                        }
+                                                    });
+                                            }
+                                        }
+                                    },
+                                    {
+                                        label: 'Amount',
+                                        fieldname: 'amount',
+                                        fieldtype: 'Currency',
+                                        read_only: 1
+                                    },
+                                    {
+                                        label: 'Discount',
+                                        fieldname: 'discount',
+                                        fieldtype: 'Currency',
+                                        change: function () {
+                                            d.set_value('paid_amount', d.get_value('amount') - d.get_value('discount'));
+                                        }
+                                    },
+                                    {
+                                        label: 'Paid Amount',
+                                        fieldname: 'paid_amount',
+                                        fieldtype: 'Currency'
+                                    }
+                                ],
+                                size: 'small',
+                                primary_action_label: 'Submit',
+                                primary_action(values) {
+                                    if (submitted) {
+                                        frappe.msgprint("Submission is already in progress...");
+                                        return;
+                                    }
+            
+                                    submitted = true;
+                                    d.get_primary_btn().prop('disabled', true);  // Disable button
+            
+                                    if (frm.doc.practitioner == values.practitioner) {
+                                        submitted = false;
+                                        d.get_primary_btn().prop('disabled', false);
+                                        frappe.throw("You can't refer the same doctor!!");
+                                    }
+            
+                                    // First: Refer to new doctor
+                                    frappe.call({
+                                        method: "his.api.make_cancel_ques.make_refer_que",
+                                        args: {
+                                            "que": frm.doc.name,
+                                            "patient": frm.doc.patient,
+                                            "practitioner": values.practitioner,
+                                            "amount": values.amount,
+                                            "discount": values.discount,
+                                            "paid_amount": values.paid_amount,
+                                        },
+                                        callback: function (r) {
+                                            frappe.utils.play_sound("submit");
+                                            frappe.utils.print("Que", r.message, "Que","logo")
+                                            // frappe.set_route('Form', 'Que', r.message);
+                                            d.hide();
+                                        },
+                                        error: function () {
+                                            submitted = false;
+                                            d.get_primary_btn().prop('disabled', false);
+                                        }
+                                    });
+            
+                                    // Second: Cancel old queue
+                                    frappe.call({
+                                        method: "his.api.make_cancel_ques.make_cancel",
+                                        args: {
+                                            "que": frm.doc.name,
+                                            "sales_invoice": frm.doc.sales_invoice,
+                                            "sakes_order": frm.doc.sales_order,
+                                            "fee": frm.doc.fee_validity,
+                                        },
+                                        callback: function (r) {
+                                            frappe.utils.play_sound("submit");
+                                            frappe.show_alert({
+                                                message: __('Patient Que Canceled Successfully'),
+                                                indicator: 'red',
+                                            }, 5);
+                                        },
+                                        error: function () {
+                                            submitted = false;
+                                            d.get_primary_btn().prop('disabled', false);
+                                        }
+                                    });
+                                }
+                            });
+            
+                            d.show();
+                        }, () => {
+                            // Cancelled confirm dialog
+                        }
+                    );
+                });
                
                 if (frappe.user_roles.includes('Main Cashier') || frappe.user_roles.includes('Cashier')) {
 

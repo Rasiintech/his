@@ -71,7 +71,7 @@ frappe.query_reports["Custom Account Receivable Summary"] = {
 			"fieldname":"cost_center",
 			"label": __("Cost Center"),
 			"fieldtype": "Link",
-			"hidden": 0,
+			"hidden": 1,
 			"options": "Cost Center",
 			get_query: () => {
 				var company = frappe.query_report.get_filter_value('company');
@@ -90,10 +90,17 @@ frappe.query_reports["Custom Account Receivable Summary"] = {
 		},
 		{
 			"fieldname":"customer_group",
-			"label": __("Customer Group"),
+			"label": __("Debtor"),
 			"fieldtype": "Link",
 			"options": "Customer Group",
-			"hidden":1
+			// "hidden":1
+		},
+		{
+			"fieldname":"based_by",
+			"label": __("By"),
+			"fieldtype": "Select",
+			"options": ["Patient" , "Debtor"],
+			// "hidden":1
 		},
 		{
 			"fieldname":"payment_terms_template",
@@ -168,4 +175,4 @@ frappe.query_reports["Custom Account Receivable Summary"] = {
 	// }
 }
 
-erpnext.utils.add_dimensions('Account Receivable Summary', 9);
+erpnext.utils.add_dimensions('Custom Account Receivable Summary', 9);

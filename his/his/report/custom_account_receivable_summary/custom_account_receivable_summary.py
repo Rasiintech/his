@@ -7,8 +7,9 @@ from frappe import _, scrub
 from frappe.utils import cint, flt
 from six import iteritems
 
-# from erpnext.accounts.party import get_partywise_advanced_payment_amount
+from erpnext.accounts.party import get_partywise_advanced_payment_amount
 from erpnext.accounts.report.accounts_receivable.accounts_receivable import ReceivablePayableReport
+from itertools import groupby
 
 
 def execute(filters=None):
@@ -28,59 +29,139 @@ class AccountReceivableSummary(ReceivablePayableReport):
 		)
 		self.get_columns()
 		self.get_data(args)
-		return self.columns, self.data
+		result = []
+		if self.filters.based_by == "Debtor":
+			sorted_data = sorted(self.data, key=lambda x: x['customer_group'])
+
+			# Group the sorted data by the 'customer_group' key
+			grouped_data = groupby(sorted_data, key=lambda x: x['customer_group'])
+
+			# Aggregate balances for each group
+			result = [{"customer_group": key , "receipt" : f"""<button style='padding: 3px; margin:-5px' class= 'btn btn-primary' onClick='receipt("" , "" , "{key}")'>Receipt</button>""", "outstanding": sum(item['outstanding']  for item in group)} for key, group in grouped_data]
+		else:
+			result = self.data
+		return self.columns,result
+
+	# def get_data(self, args):
+	# 	self.data = []
+
+	# 	self.receivables = ReceivablePayableReport(self.filters).run(args)[1]
+		
+
+	# 	self.get_party_total(args)
+
+	# 	party_advance_amount = (
+	# 		get_partywise_advanced_payment_amount(
+	# 			self.party_type,
+	# 			self.filters.report_date,
+	# 			self.filters.show_future_payments,
+	# 			self.filters.company,
+	# 		)
+	# 		or {}
+	# 	)
+
+	# 	if self.filters.show_gl_balance:
+	# 		gl_balance_map = get_gl_balance(self.filters.report_date)
+
+	# 	for party, party_dict in iteritems(self.party_total):
+	# 		# frappe.errprint(party_dict)
+	# 		if party_dict.outstanding == 0:
+	# 			continue
+
+	# 		row = frappe._dict()
+
+	# 		row.party = party
+	# 		if self.party_naming_by == "Naming Series":
+	# 			row.party_name = frappe.get_cached_value(
+	# 				self.party_type, party, scrub(self.party_type) + "_name"
+	# 			)
+	# 		row.resonsible =frappe.db.get_value("Customer Credit Limit",{"parent":party},"responsible")
+	# 		row.mobile_no = frappe.db.get_value("Patient",{"customer" : party},"mobile_no")
+	# 		row.receipt	  =f"""<button style='padding: 3px; margin:-5px' class= 'btn btn-primary' onClick='payment_entry("{party}" , "{party_dict.outstanding}")'>Receipt</button>"""
+	# 		row.statement =f"""<button style='padding: 3px; margin:-5px' class= 'btn btn-primary' onClick='statement("{party}")'>Statements</button>"""
+	# 		row.update(party_dict)
+
+	# 		# Advance against party
+	# 		row.advance = party_advance_amount.get(party, 0)
+
+	# 		# In AR/AP, advance shown in paid columns,
+	# 		# but in summary report advance shown in separate column
+	# 		row.paid 
+
+	# 		if self.filters.show_gl_balance:
+	# 			row.gl_balance = gl_balance_map.get(party)
+	# 			row.diff = flt(row.outstanding) - flt(row.gl_balance)
+
+	# 		self.data.append(row)
 
 	def get_data(self, args):
 		self.data = []
 
+		# Run base report logic
 		self.receivables = ReceivablePayableReport(self.filters).run(args)[1]
-		
 
 		self.get_party_total(args)
 
-		# party_advance_amount = (
-		# 	get_partywise_advanced_payment_amount(
-		# 		self.party_type,
-		# 		self.filters.report_date,
-		# 		self.filters.show_future_payments,
-		# 		self.filters.company,
-		# 	)
-		# 	or {}
-		# )
+		# 🔄 Batch fetch responsible persons
+		responsible_map = frappe._dict({
+			r.parent: r.responsible
+			for r in frappe.get_all("Customer Credit Limit", fields=["parent", "responsible"])
+		})
 
+		# 🔄 Batch fetch mobile numbers
+		patient_mobile_map = frappe._dict({
+			r.customer: r.mobile_no
+			for r in frappe.get_all("Patient", fields=["customer", "mobile_no"])
+		})
+
+		# 🔄 Optional: batch fetch customer names if using naming series
+		if self.party_naming_by == "Naming Series":
+			party_name_map = frappe._dict({
+				r.name: r.customer_name
+				for r in frappe.get_all("Customer", fields=["name", "customer_name"])
+			})
+
+		# ✅ Advanced payments
+		party_advance_amount = get_partywise_advanced_payment_amount(
+			self.party_type,
+			self.filters.report_date,
+			self.filters.show_future_payments,
+			self.filters.company,
+		) or {}
+
+		# ✅ GL balance map
 		if self.filters.show_gl_balance:
 			gl_balance_map = get_gl_balance(self.filters.report_date)
 
 		for party, party_dict in iteritems(self.party_total):
-			# frappe.errprint(party_dict)
-			if party_dict.outstanding == 0:
+			if round(party_dict.outstanding, 2) == 0:
 				continue
 
 			row = frappe._dict()
-
 			row.party = party
+
+			# ✅ Faster: use pre-fetched customer name
 			if self.party_naming_by == "Naming Series":
-				row.party_name = frappe.get_cached_value(
-					self.party_type, party, scrub(self.party_type) + "_name"
-				)
-			row.resonsible =frappe.db.get_value("Customer Credit Limit",{"parent":party},"responsible")
-			row.mobile_no = frappe.db.get_value("Patient",{"customer" : party},"mobile_no")
-			row.receipt	  =f"""<button style='padding: 3px; margin:-5px' class= 'btn btn-primary' onClick='receipt("{party}" , "{party_dict.outstanding}" , "{party_dict.outstanding * 1.05}")'>Receipt</button>"""
-			row.statement =f"""<button style='padding: 3px; margin:-5px' class= 'btn btn-primary' onClick='statement("{party}")'>Statements</button>"""
+				row.party_name = party_name_map.get(party)
+
+			# ✅ Use batched values
+			row.resonsible = responsible_map.get(party)
+			row.mobile_no = patient_mobile_map.get(party)
+
+			# Inline buttons
+			row.receipt = f"""<button style='padding: 3px; margin:-5px' class='btn btn-primary' onClick='payment_entry("{party}" , "{party_dict.outstanding}")'>Receipt</button>"""
+			row.statement = f"""<button style='padding: 3px; margin:-5px' class='btn btn-primary' onClick='statement("{party}")'>Statements</button>"""
+
 			row.update(party_dict)
-
-			# Advance against party
-			# row.advance = party_advance_amount.get(party, 0)
-
-			# In AR/AP, advance shown in paid columns,
-			# but in summary report advance shown in separate column
-			row.paid 
+			row.advance = party_advance_amount.get(party, 0)
+			_ = row.paid  # dummy read
 
 			if self.filters.show_gl_balance:
 				row.gl_balance = gl_balance_map.get(party)
 				row.diff = flt(row.outstanding) - flt(row.gl_balance)
 
 			self.data.append(row)
+
 
 	def get_party_total(self, args):
 		self.party_total = frappe._dict()
@@ -131,18 +212,26 @@ class AccountReceivableSummary(ReceivablePayableReport):
 	def get_columns(self):
 		self.columns = []
 		self.add_column(
-			label=_(self.party_type),
+			label=_("Customer ID"),
 			fieldname="party",
 			fieldtype="Link",
 			options=self.party_type,
-			width=280,
+			width=180,
 		)
 
 		if self.party_naming_by == "Naming Series":
-			self.add_column(_("{0} Name").format(self.party_type), fieldname="party_name", fieldtype="Data",width=280)
-		
-		self.add_column(_("Responsible"), fieldname="resonsible", fieldtype="Data")
+			self.add_column(_("{0} Name").format(self.party_type), fieldname="party_name", fieldtype="Data" , width = 200)
 		self.add_column(_("Mobile No"), fieldname="mobile_no", fieldtype="Data")
+		self.add_column(
+				label=_("Customer Group"),
+				fieldname="customer_group",
+				fieldtype="Link",
+				options="Customer Group",
+				width = 150
+			)
+		self.add_column(_("Responsible"), fieldname="resonsible", fieldtype="Data")
+		
+		
 		credit_debit_label = "Return" if self.party_type == "Customer" else "Debit Note"
 
 		# self.add_column(_("Advance A mount"), fieldname="advance")
