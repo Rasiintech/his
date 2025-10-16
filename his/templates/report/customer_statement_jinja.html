@@ -4,7 +4,8 @@
     <meta charset="UTF-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>JAZEERA SPECIALIST HOSPITAL</title>
+    <title> {{ frappe.db.get_value("Customer", filters['party'][0],
+                "customer_name") }}</title>
     <!-- <link rel="stylesheet" href="style.css" /> -->
   </head>
   <style>
@@ -343,7 +344,7 @@ margin-left: 370px; */
         <table style="width: 100%;" class="table table-bordered">
           <tr>
             <th style="text-align: left;">Date</th>
-            <th style="text-align: left;">Time</th>
+            <!-- <th style="text-align: left;">Time</th> -->
             <th style="text-align: left;">User</th>
 
             {% if frappe.db.get_value("Customer", filters['party'][0],"customer_group")!= "Insurance" %}

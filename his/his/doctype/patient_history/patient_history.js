@@ -74,7 +74,7 @@ frappe.ui.form.on('Patient History', {
 
 		if (frappe.user_roles.includes('Doctor') || frappe.user_roles.includes('Nurse')) {
 			var btn = frm.add_custom_button('Discharge', () => {
-				frappe.new_doc("Discharge Summary", { "patient": frm.doc.patient, "ref_practitioner": frm.doc.consultant, "doctor_plan": frm.doc.name })
+				frappe.new_doc("Discharge Summery", { "patient": frm.doc.patient, "ref_practitioner": frm.doc.consultant, "doctor_plan": frm.doc.name })
 			
 			})
 			btn.addClass('btn-danger');
@@ -157,7 +157,7 @@ frappe.ui.form.on('Patient History', {
 			  },__("Share or Refer"))
 			if (frappe.user_roles.includes('Doctor') || frappe.user_roles.includes('Nurse')) {
 			var btn = frm.add_custom_button('Discharge', () => {
-				frappe.new_doc("Discharge Summary", { "patient": frm.doc.patient, "ref_practitioner": frm.doc.ref_practitioner, "doctor_plan": frm.doc.name })
+				frappe.new_doc("Discharge Summery", { "patient": frm.doc.patient, "ref_practitioner": frm.doc.ref_practitioner, "doctor_plan": frm.doc.name })
 			
 			})
 			btn.addClass('btn-danger');

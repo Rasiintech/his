@@ -130,7 +130,7 @@ IPD = Class.extend(
 			// if(row.status !== "Draft" && row.status !== "Cancelled" && row.status!= "Completed" ){
 			
 			btnhml += `
-			<button class='btn btn-primary ml-2' onclick = "admit('${row.name}','${row.patient }', '${row.admission_practitioner }', '${row.type }')"> Admit</button>
+			<button class='btn btn-primary ml-2' onclick = "admit('${row.name}','${row.patient }', '${row.admission_practitioner }')"> Admit</button>
 			<button class='btn btn-danger ml-2' onclick = "cancel_admision('${row.name}','${row.patient }')"> Cancel</button>
 		
 			

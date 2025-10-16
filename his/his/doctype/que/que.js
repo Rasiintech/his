@@ -77,6 +77,74 @@ frappe.ui.form.on('Que', {
                                             }
                                         }
                                     },
+                                     {
+                                        label: 'Is Insurance',
+                                        fieldname: 'is_insurance',
+                                        fieldtype: 'Check',
+                                        default: 0
+                                    },
+                                    {
+                                        label: 'Bill',
+                                        fieldname: 'bil',
+                                        fieldtype: 'Link',
+                                        options: 'Customer',
+                                        mandatory_depends_on: 'eval:doc.is_insurance',
+                                        depends_on:'eval:doc.is_insurance',
+                                        
+                                        get_query: () => {
+                                            return {
+                                            filters: { customer_group: 'Insurance' }
+                                            };
+                                        },
+                                        change: function () {
+                                            d.set_value('paid_amount', 0);
+                                        }
+                                        },
+                                        {
+                                        label: 'Bill to Employee',
+                                        fieldname: 'bill_to_employee',
+                                        fieldtype: 'Check',
+                                        default: 0
+                                    },
+                                    {
+                                    label: 'Employee',
+                                    fieldname: 'employee',
+                                    fieldtype: 'Link',
+                                    options: 'Employee',
+                                    mandatory_depends_on: 'eval:doc.bill_to_employee',
+                                    depends_on: 'eval:doc.bill_to_employee',
+                                    change() {
+                                        const emp = d.get_value('employee');
+
+                                        // reset amounts as you already do
+                                        d.set_value('paid_amount', 0);
+
+                                        // clear full name if nothing selected
+                                        if (!emp) {
+                                        d.set_value('full_name', '');
+                                        return;
+                                        }
+
+                                        // fetch the full name from Employee
+                                        frappe.db.get_value('Employee', emp, ['employee_name', ])
+                                        .then(r => {
+                                            const m = r.message || {};
+                                            // prefer ERPNext’s computed employee_name; fallback to parts
+                                            const name =
+                                            m.employee_name 
+                                            d.set_value('full_name', name || '');
+                                        });
+                                    }
+                                    },
+                                    {
+                                    label: 'Full Name',
+                                    fieldname: 'full_name',
+                                    fieldtype: 'Data',
+                                    read_only: 1  // optional, usually you don’t want users editing this
+                                    },
+
+
+                                   
                                     {
                                         label: 'Amount',
                                         fieldname: 'amount',
@@ -87,6 +155,7 @@ frappe.ui.form.on('Que', {
                                         label: 'Discount',
                                         fieldname: 'discount',
                                         fieldtype: 'Currency',
+                                        default: 0,
                                         change: function () {
                                             d.set_value('paid_amount', d.get_value('amount') - d.get_value('discount'));
                                         }
@@ -113,6 +182,8 @@ frappe.ui.form.on('Que', {
                                         d.get_primary_btn().prop('disabled', false);
                                         frappe.throw("You can't refer the same doctor!!");
                                     }
+                                    
+
             
                                     // First: Refer to new doctor
                                     frappe.call({
@@ -124,6 +195,10 @@ frappe.ui.form.on('Que', {
                                             "amount": values.amount,
                                             "discount": values.discount,
                                             "paid_amount": values.paid_amount,
+                                            "is_insurance": values.is_insurance,
+                                            "insurance":values.bil,
+                                            "employee":values.employee,
+                                            "bill_to_employee": values.bill_to_employee
                                         },
                                         callback: function (r) {
                                             frappe.utils.play_sound("submit");

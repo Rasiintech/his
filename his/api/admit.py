@@ -40,9 +40,12 @@ def  admit_p(inp_doc, service_unit,patient, type, practitioner, is_insurance = "
 	ip_doc.inpatient_status = "Admitted"
 	ip_doc.type=type
 	ip_doc.floor=frappe.db.get_value("Healthcare Service Unit Type", ip_doc.room , "floor")
-	ip_doc.primary_practitioner = practitioner
-	ip_doc.secondary_practitioner = practitioner
+	if practitioner:
+		ip_doc.primary_practitioner = practitioner
+		ip_doc.secondary_practitioner = practitioner
+	# frappe.errprint(practitioner)
 	ip_doc.save()
+
 	if is_insurance:
 		ip_doc.insurance = is_insurance
 		ip_doc.save()

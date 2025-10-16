@@ -4,10 +4,10 @@
   "doctype": "Client Script",
   "dt": "Sales Order",
   "enabled": 1,
-  "modified": "2025-09-06 13:44:30.287672",
+  "modified": "2025-09-11 13:34:35.954389",
   "module": "HIS",
   "name": "Sales Order",
-  "script": "frappe.ui.form.on('Sales Order', {\n\trefresh(frm) {\n\t    \nif (!frm.is_new() && !frm.doc.total_with_vat ) {\n    frappe.db.set_value(\"Sales Order\", frm.doc.name, { \"total_with_vat\": (frm.doc.grand_total * 1.05)});\n}\n// \tif(flt(frm.doc.per_billed, 6) < 100) {\n\t\t\tfrm.add_custom_button(__('Cash Sales'), () => make_sales_invoice(frm));\n\t\t\t\tfrm.add_custom_button(__('Credit Sales'), () => make_credit_invoice(frm));\n// \t\t}\n\t},\n\t\t   \n\npatient:function(frm){  \n    if(frm.is_new()){\n\t       //frm.set_value(\"total_with_vat\", (frm.doc.grand_total * 1.05))\n\t       //console.log(frm.doc.patient_name)\n    }\n\t         \n}\n\t    \n})\n\nvar make_sales_invoice =  function(frm) {\n\t\tfrappe.model.open_mapped_doc({\n\t\t\tmethod: \"his.api.make_invoice.make_sales_invoice\",\n\t\t\tfrm: frm\n\t\t})\n\t}\n\t\n\tvar make_credit_invoice =  function(frm) {\n\t\tfrappe.model.open_mapped_doc({\n\t\t\tmethod: \"his.api.make_invoice.make_credit_invoice\",\n\t\t\tfrm: frm\n\t\t})\n\t}",
+  "script": "frappe.ui.form.on('Sales Order', {\n\trefresh(frm) {\n\t    \n// if (!frm.is_new() && !frm.doc.total_with_vat ) {\n//     frappe.db.set_value(\"Sales Order\", frm.doc.name, { \"total_with_vat\": (frm.doc.grand_total * 1.05)});\n// }\n// \tif(flt(frm.doc.per_billed, 6) < 100) {\n\t\t\tfrm.add_custom_button(__('Cash Sales'), () => make_sales_invoice(frm));\n\t\t\t\tfrm.add_custom_button(__('Credit Sales'), () => make_credit_invoice(frm));\n// \t\t}\n\t},\n\t\t   \n\npatient:function(frm){  \n    if(frm.is_new()){\n\t       //frm.set_value(\"total_with_vat\", (frm.doc.grand_total * 1.05))\n\t       //console.log(frm.doc.patient_name)\n    }\n\t         \n}\n\t    \n})\n\nvar make_sales_invoice =  function(frm) {\n\t\tfrappe.model.open_mapped_doc({\n\t\t\tmethod: \"his.api.make_invoice.make_sales_invoice\",\n\t\t\tfrm: frm\n\t\t})\n\t}\n\t\n\tvar make_credit_invoice =  function(frm) {\n\t\tfrappe.model.open_mapped_doc({\n\t\t\tmethod: \"his.api.make_invoice.make_credit_invoice\",\n\t\t\tfrm: frm\n\t\t})\n\t}",
   "view": "Form"
  },
  {

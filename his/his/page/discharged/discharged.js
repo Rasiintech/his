@@ -94,7 +94,7 @@ Disch = Class.extend(
 				// Fetch discharged_type for each inpatient record
 				let new_data = [];
 				let promises = tbldata.map(row => {
-					return frappe.db.get_value('Discharge Summary', { 'patient': row.patient }, 'discharged_type').then(res => {
+					return frappe.db.get_value('Discharge Summery', { 'patient': row.patient }, 'discharged_type').then(res => {
 						row['discharged_type'] = res.message.discharged_type; // Set the discharged_type in the row
 						new_data.push(row); // Push the row with discharged_type to new_data
 					});

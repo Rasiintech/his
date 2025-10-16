@@ -540,8 +540,10 @@ var schedule_inpatient = function(frm) {
 				referring_practitioner: frm.doc.practitioner,
 				company: frm.doc.company,
 				medical_department: dialog.get_value('medical_department'),
-				primary_practitioner: dialog.get_value('primary_practitioner'),
-				secondary_practitioner: dialog.get_value('secondary_practitioner'),
+				primary_practitioner: frm.doc.practitioner,
+				secondary_practitioner: frm.doc.practitioner,
+				admission_practitioner: frm.doc.practitioner,
+                diagnosis: dialog.get_value('diagnosis'),
 				admission_ordered_for: dialog.get_value('admission_ordered_for'),
 				admission_service_unit_type: dialog.get_value('service_unit_type'),
 				expected_length_of_stay: dialog.get_value('expected_length_of_stay'),
@@ -549,7 +551,7 @@ var schedule_inpatient = function(frm) {
 				admission_nursing_checklist_template: dialog.get_value('admission_nursing_checklist_template')
 			}
 			frappe.call({
-				method: 'healthcare.healthcare.doctype.inpatient_record.inpatient_record.schedule_inpatient',
+				method: 'his.api.admission_schd.schedule_inpatient_enc',
 				args: {
 					args: args
 				},

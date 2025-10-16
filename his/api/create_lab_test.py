@@ -14,8 +14,8 @@ def create_lab_tests(doc , method = None):
 
 	for item in sam.items:
 		# if item.item_group == "Laboratory":
-		if item.item_group == "Laboratory":
-			template = frappe.get_doc("Lab Test Template" , item.item_code)
+		if frappe.db.exists("Lab Test Template", {"item": item.item_code}, cache=True):
+			template = frappe.get_doc("Lab Test Template" , {"item":item.item_code})
 			# if template.department == "Hormones":
 
 			# 	if template.lab_test_template_type == "Single":

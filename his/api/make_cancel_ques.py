@@ -1,29 +1,3 @@
-# from erpnext.stock.get_item_details import get_pos_profile
-# import  frappe
-
-# @frappe.whitelist()
-# def make_cancel(**args):
-# 	que= frappe.get_doc("Que", args.get("que"))
-# 	if que.owner == frappe.session.user:
-# 		frappe.db.set_value('Que', args.get("que"), 'status', 'Canceled')
-# 		s= frappe.get_doc("Sales Invoice",args.get("sales_invoice"))
-		
-# 		so = args.get("sales_order")
-# 		if so:
-# 			sales_order =  frappe.get_doc("Sales Order",args.get("sales_order"))
-# 			sales_order.cancel()
-# 		# f= frappe.get_doc("Fee Validity",args.get("fee"))
-# 		# f.cancel()
-# 		if s:
-# 			s.cancel()
-# 	else:
-# 		frappe.throw("You are not the owner of this que")
-
-
-
-
-
-
 from erpnext.stock.get_item_details import get_pos_profile
 import  frappe
 from erpnext.stock.get_item_details import get_pos_profile
@@ -33,18 +7,17 @@ from his.api.make_invoice import make_credit_invoice
 @frappe.whitelist()
 def make_cancel(**args):
     frappe.db.set_value('Que', args.get("que"), 'status', 'Canceled')
-    s= frappe.get_doc("Sales Invoice",args.get("sales_invoice"))
+    s = args.get("sales_invoice")
+    if s:
+        s= frappe.get_doc("Sales Invoice",args.get("sales_invoice"))
+        s.flags.ignore_permissions = True
+        s.cancel()
     
     so = args.get("sales_order")
     if so:
         sales_order =  frappe.get_doc("Sales Order",args.get("sales_order"))
         sales_order.cancel()
-    # f= frappe.get_doc("Fee Validity",args.get("fee"))
-    # f.cancel()
-    if s:
-        s.flags.ignore_permissions = True
-        s.cancel()
-  
+        
 @frappe.whitelist()
 def make_refer_que(**args):
     company = frappe.defaults.get_user_default("company")
@@ -63,6 +36,10 @@ def make_refer_que(**args):
     discount= args.get("discount")
     paid_amount= args.get("paid_amount")
     practitioner= args.get("practitioner")
+    insurance=args.get("insurance")
+    is_insurance=args.get("is_insurance")
+    employee=args.get("employee")
+    bill_to_employee=args.get("bill_to_employee")
     # items.append({
     #         "item_code" : "OPD Consultation",
     #         "rate" : float(doctor_amount),
@@ -109,6 +86,11 @@ def make_refer_que(**args):
             "discount": float(discount),
             "que_type" : "New Patient", 
             "paid_amount" : float(paid_amount), 
+            "bill_to_insurance":is_insurance,
+            "insurance":insurance,
+            "employee":employee,
+            "bill_to_employee":bill_to_employee
+
             # "sales_invoice": sales_doc.name
 
             })

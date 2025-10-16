@@ -86,22 +86,17 @@ frappe.query_reports["Custom Account Receivable Summary"] = {
 			"fieldname":"customer",
 			"label": __("Customer"),
 			"fieldtype": "Link",
-			"options": "Customer"
+			"options": "Customer",
+			"hidden":1
 		},
 		{
 			"fieldname":"customer_group",
-			"label": __("Debtor"),
+			"label": __("Customer Group"),
 			"fieldtype": "Link",
 			"options": "Customer Group",
-			// "hidden":1
+			"hidden":1
 		},
-		{
-			"fieldname":"based_by",
-			"label": __("By"),
-			"fieldtype": "Select",
-			"options": ["Patient" , "Debtor"],
-			// "hidden":1
-		},
+		
 		{
 			"fieldname":"payment_terms_template",
 			"label": __("Payment Terms Template"),
