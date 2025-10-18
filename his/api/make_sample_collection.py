@@ -32,6 +32,8 @@ def make_sample_collection(doc, method=None , items = None):
             # "blood_donar" : 1
         })
         sm_doc.insert(ignore_permissions = True)
+        sm_doc.lab_ref=sm_doc.name.split("-")[1]
+        sm_doc.save()
         # if doc.ref_patient:
         #     blood_strore = 
 

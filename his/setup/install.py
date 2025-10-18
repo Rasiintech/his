@@ -367,6 +367,17 @@ def create_his_accounts():
             "parent_account": "1300 - Accounts Receivable - "+abbr,
         })
         doc.insert()
+    for account in ["Cashier","Pharmacy"]:
+        if frappe.db.exists("Account", account +' - '+abbr):
+            continue
+        doc = frappe.get_doc({
+            "doctype": "Account",
+            "account_name": account,
+            "company": company,
+            "account_type": "Cash",
+            "parent_account": "1100 - Cash In Hand - "+abbr,
+        })
+        doc.insert()
     frappe.db.commit()
     print("Done")
 

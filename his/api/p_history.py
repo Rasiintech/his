@@ -41,7 +41,7 @@ def get_history(patient , from_date = "2019-01-01", to_date = getdate()):
             select {fields}  {join_fields}
             from `tab{config.parent_document}`p
             {join}
-            where patient  = '{patient}' 
+            where patient  = '{patient}' and  p.docstatus !=1
 
         
          """ , as_dict = 1)
@@ -53,6 +53,7 @@ def get_history(patient , from_date = "2019-01-01", to_date = getdate()):
 
         "patient" : patient,
         "table": p_history,
+        "letter_head": frappe.db.get_value("Letter Head",{"is_default": 1}, "image")
 
         }
 	)
