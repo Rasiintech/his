@@ -1,6 +1,5 @@
-# Copyright (c) 2015, Frappe Technologies Pvt. Ltd. and Contributors and contributors
-# For license information, please see license.txt
-
+# Copyright (c) 2015, Frappe Technologies Pvt. Ltd.
+# Optimized variant by consolidating queries & fixing minor bugs.
 
 import frappe
 from frappe import _, scrub
@@ -16,7 +15,6 @@ def execute(filters=None):
 		"party_type": "Customer",
 		"naming_by": ["Selling Settings", "cust_master_name"],
 	}
-
 	return AccountReceivableSummary(filters).run(args)
 
 
@@ -33,73 +31,132 @@ class AccountReceivableSummary(ReceivablePayableReport):
 	def get_data(self, args):
 		self.data = []
 
+		# base receivables
 		self.receivables = ReceivablePayableReport(self.filters).run(args)[1]
-
 		self.get_party_total(args)
 
-		party_advance_amount = (
-			get_partywise_advanced_payment_amount(
-				self.party_type,
-				self.filters.report_date,
-				self.filters.show_future_payments,
-				self.filters.company,
-			)
-			or {}
+		parties = list(self.party_total.keys())
+		if not parties:
+			return
+
+		report_date = self.filters.report_date
+		company = self.filters.company
+
+		# --- batch fetches (avoid N+1) ---------------------------------------
+		# 1) map: party -> customer_name
+		customer_rows = frappe.db.get_all(
+			"Customer",
+			filters={"name": ("in", parties)},
+			fields=["name", "customer_name"],
+			pluck=None,
 		)
+		customer_name_map = {r.name: r.customer_name for r in customer_rows}
 
+		# 2) inpatient info for only those customer_names we care about
+		customer_names = list({cn for cn in customer_name_map.values() if cn})
+		inpatient_rows = []
+		if customer_names:
+			inpatient_rows = frappe.db.get_all(
+				"Inpatient Record",
+				filters={"patient_name": ("in", customer_names), "status": ["in", ["Discharge Scheduled", "Admitted"]],},
+				fields=["patient_name", "room", "bed", "patient"],
+			)
+		# map: patient_name -> inpatient record fields
+		inpatient_map = {r.patient_name: r for r in inpatient_rows}
+
+		# 3) credit limits in bulk
+		credit_rows = frappe.db.get_all(
+			"Customer Credit Limit",
+			filters={"parent": ("in", parties)},
+			fields=["parent", "credit_limit"],
+		)
+		credit_map = {}
+		for r in credit_rows:
+			# if multiple rows per parent exist, you could aggregate or pick first
+			credit_map.setdefault(r.parent, r.credit_limit)
+
+	# 4) contacts (your original code used Contact named as f"{party}-{party}")
+		
+		# 5) party advance amounts (kept, though unused in original output)
+		party_advance_amount = get_partywise_advanced_payment_amount(
+			self.party_type,
+			report_date,
+			self.filters.show_future_payments,
+			company,
+		) or {}
+
+		# 6) optional GL balance map
+		gl_balance_map = {}
 		if self.filters.show_gl_balance:
-			gl_balance_map = get_gl_balance(self.filters.report_date)
+			gl_balance_map = get_gl_balance(report_date)
+		# ----------------------------------------------------------------------
 
+		# build rows
 		for party, party_dict in iteritems(self.party_total):
-			if party_dict.outstanding == 0:
+			# skip zero outstanding
+			if flt(party_dict.outstanding) == 0:
 				continue
-			
+
+			# only include if this party's customer_name is an inpatient
+			customer_name = customer_name_map.get(party)
+			if not customer_name:
+				continue
+
+			ip = inpatient_map.get(customer_name)
+			if not ip:
+				continue  # customer is not currently inpatients; skip
+
 			row = frappe._dict()
-			frappe.errprint(row.party)
 			row.party = party
-			inpatient = frappe.db.get_list('Inpatient Record',   pluck='patient_name')
-			customer = frappe.get_value("Customer",party,"customer_name")
-			if customer in inpatient:
-				if self.party_naming_by == "Naming Series":
-					row.party_name = frappe.get_cached_value(
-						self.party_type, party, scrub(self.party_type) + "_name"
-					)
-					
-				row.room = frappe.get_value("Inpatient Record",{"patient_name": customer},"room")
-				row.credit_limit = frappe.get_value("Customer Credit Limit",{"parent": party,},"credit_limit")
-				row.bed = frappe.get_value("Inpatient Record",{"patient_name": customer,},"bed")
-				row.patient = frappe.get_value("Inpatient Record",{"patient_name": customer,},"patient")
-				row.mobile_no = frappe.get_value("Contact",party+"-"+party,"mobile_no")
-				row.receipt	  =f"""<button style='padding: 3px; margin:-5px' class= 'btn btn-primary' onClick='receipt("{party}", "{party_dict.outstanding}" , "{party_dict.outstanding * 1.05}")'>Receipt</button>"""
-				row.statement =f"""<button style='padding: 3px; margin:-5px' class= 'btn btn-primary' onClick='statement("{party}")'>Statements</button>"""
-				row.update(party_dict)
 
-				# Advance against party
-				# row.advance = party_advance_amount.get(party, 0)
+			# "Naming Series" means show the *_name field
+			if self.party_naming_by == "Naming Series":
+				row.party_name = frappe.get_cached_value(
+					self.party_type, party, scrub(self.party_type) + "_name"
+				)
 
-				# In AR/AP, advance shown in paid columns,
-				# but in summary report advance shown in separate column
-				row.paid 
+			# inpatient fields
+			row.room = ip.room
+			row.bed = ip.bed
+			row.patient = ip.patient
 
-				if self.filters.show_gl_balance:
-					row.gl_balance = gl_balance_map.get(party)
-					row.diff = flt(row.outstanding) - flt(row.gl_balance)
+			# credit & contact (best-effort)
+			row.credit_limit = credit_map.get(party)
 
-				self.data.append(row)
+			# money fields from the aggregated party_dict
+			row.update(party_dict)
+
+			# if you want to reflect advances separately, uncomment:
+			# row.advance = flt(party_advance_amount.get(party, 0))
+			# row.paid = flt(row.paid) + row.advance
+
+			# action buttons (keep HTML compact & safe)
+			outstanding = flt(party_dict.outstanding)
+			outstanding_with_5pct = flt(outstanding * 1.05)
+			row.receipt = (
+				f"<button style='padding:3px;margin:-5px' class='btn btn-primary' "
+				f"onClick='receipt(\"{frappe.utils.escape_html(party)}\", "
+				f"\"{outstanding}\", \"{outstanding_with_5pct}\")'>Receipt</button>"
+			)
+			row.statement = (
+				f"<button style='padding:3px;margin:-5px' class='btn btn-primary' "
+				f"onClick='statement(\"{frappe.utils.escape_html(party)}\")'>Statements</button>"
+			)
+
+			if self.filters.show_gl_balance:
+				row.gl_balance = flt(gl_balance_map.get(party))
+				row.diff = flt(row.outstanding) - flt(row.gl_balance)
+
+			self.data.append(row)
 
 	def get_party_total(self, args):
 		self.party_total = frappe._dict()
-
 		for d in self.receivables:
 			self.init_party_total(d)
-
-			# Add all amount columns
+			# Add all amount columns present on row d
 			for k in list(self.party_total[d.party]):
 				if k not in ["currency", "sales_person"]:
-
 					self.party_total[d.party][k] += d.get(k, 0.0)
-
-			# set territory, customer_group, sales person etc
 			self.set_party_details(d)
 
 	def init_party_total(self, row):
@@ -111,7 +168,6 @@ class AccountReceivableSummary(ReceivablePayableReport):
 					"paid": 0.0,
 					"credit_note": 0.0,
 					"outstanding": 0.0,
-					
 					"range1": 0.0,
 					"range2": 0.0,
 					"range3": 0.0,
@@ -125,11 +181,9 @@ class AccountReceivableSummary(ReceivablePayableReport):
 
 	def set_party_details(self, row):
 		self.party_total[row.party].currency = row.currency
-
 		for key in ("territory", "customer_group", "supplier_group"):
 			if row.get(key):
 				self.party_total[row.party][key] = row.get(key)
-
 		if row.sales_person:
 			self.party_total[row.party].sales_person.append(row.sales_person)
 
@@ -142,41 +196,29 @@ class AccountReceivableSummary(ReceivablePayableReport):
 			options=self.party_type,
 			width=180,
 		)
-
 		if self.party_naming_by == "Naming Series":
 			self.add_column(_("{0} Name").format(self.party_type), fieldname="party_name", width=200, fieldtype="Data")
-		
-		self.add_column(_("Patient"), fieldname="patient",width=100 , fieldtype="Data")
-		self.add_column(_("Room"), fieldname="room",width=200 , fieldtype="Data")
-		self.add_column(_("Bed"), fieldname="bed", width=200, fieldtype="Data")
-		# self.add_column(_("Credit Limit"), fieldname="credit_limit", fieldtype="Data")
-		self.add_column(_("Mobile No"), fieldname="mobile_no", fieldtype="Data")
-		credit_debit_label = "Return" if self.party_type == "Customer" else "Debit Note"
 
-		# # self.add_column(_("Advance Amount"), fieldname="advance")
+		self.add_column(_("Patient"), fieldname="patient", width=100, fieldtype="Data")
+		self.add_column(_("Room"), fieldname="room", width=200, fieldtype="Data")
+		self.add_column(_("Bed"), fieldname="bed", width=200, fieldtype="Data")
+		# self.add_column(_("Mobile No"), fieldname="mobile_no", fieldtype="Data")
+
+		credit_debit_label = "Return" if self.party_type == "Customer" else "Debit Note"
+		# self.add_column(_("Advance Amount"), fieldname="advance")
 		# self.add_column(_("Invoiced Amount"), fieldname="invoiced")
 		# self.add_column(_("Paid Amount"), fieldname="paid")
 		# self.add_column(_(credit_debit_label), fieldname="credit_note")
+
 		self.add_column(_("Balance"), fieldname="outstanding")
-		self.add_column(_("Receipt"), fieldname="receipt" , fieldtype="Data")
-		self.add_column(_("Print Statement"), fieldname="statement" , fieldtype="Data")
+		self.add_column(_("Receipt"), fieldname="receipt", fieldtype="Data")
+		self.add_column(_("Print Statement"), fieldname="statement", fieldtype="Data")
 
 		if self.filters.show_gl_balance:
 			self.add_column(_("GL Balance"), fieldname="gl_balance")
 			self.add_column(_("Difference"), fieldname="diff")
 
-		# self.setup_ageing_columns()
-
 		if self.party_type == "Customer":
-			# self.add_column(
-			# 	label=_("Territory"), fieldname="territory", fieldtype="Link", options="Territory"
-			# )
-			# self.add_column(
-			# 	label=_("Customer Group"),
-			# 	fieldname="customer_group",
-			# 	fieldtype="Link",
-			# 	options="Customer Group",
-			# )
 			if self.filters.show_sales_person:
 				self.add_column(label=_("Sales Person"), fieldname="sales_person", fieldtype="Data")
 		else:
@@ -187,29 +229,17 @@ class AccountReceivableSummary(ReceivablePayableReport):
 				options="Supplier Group",
 			)
 
-		# self.add_column(
-		# 	label=_("Currency"), fieldname="currency", fieldtype="Link", options="Currency", width=80
-		# )
-
 	def setup_ageing_columns(self):
 		for i, label in enumerate(
 			[
 				"0-{range1}".format(range1=self.filters["range1"]),
-				"{range1}-{range2}".format(
-					range1=cint(self.filters["range1"]) + 1, range2=self.filters["range2"]
-				),
-				"{range2}-{range3}".format(
-					range2=cint(self.filters["range2"]) + 1, range3=self.filters["range3"]
-				),
-				"{range3}-{range4}".format(
-					range3=cint(self.filters["range3"]) + 1, range4=self.filters["range4"]
-				),
+				"{range1}-{range2}".format(range1=cint(self.filters["range1"]) + 1, range2=self.filters["range2"]),
+				"{range2}-{range3}".format(range2=cint(self.filters["range2"]) + 1, range3=self.filters["range3"]),
+				"{range3}-{range4}".format(range3=cint(self.filters["range3"]) + 1, range4=self.filters["range4"]),
 				"{range4}-{above}".format(range4=cint(self.filters["range4"]) + 1, above=_("Above")),
 			]
 		):
 			self.add_column(label=label, fieldname="range" + str(i + 1))
-
-		# Add column for total due amount
 		self.add_column(label="Total Amount Due", fieldname="total_due")
 
 
@@ -217,7 +247,7 @@ def get_gl_balance(report_date):
 	return frappe._dict(
 		frappe.db.get_all(
 			"GL Entry",
-			fields=["party", "sum(debit -  credit)"],
+			fields=["party", "sum(debit - credit)"],
 			filters={"posting_date": ("<=", report_date), "is_cancelled": 0},
 			group_by="party",
 			as_list=1,

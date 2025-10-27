@@ -71,9 +71,13 @@ frappe.ui.form.on('Customer Statements Sender', {
     );
   },
   preview: function (frm) {
+    var method= "his.api.api.get_report_content";
+    if (frm.doc.detail){
+      method= "his.api.api.customer_statement_details"
+    }
     if (frm.doc.customer != undefined && frm.doc.customer != "") {
       frappe.call({
-        method: "his.api.api.get_report_content",
+        method: method,
         args: {
           account : frm.doc.recieable_account,
           company: frm.doc.company,

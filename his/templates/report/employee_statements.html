@@ -197,13 +197,7 @@
 					{{ frappe.db.get_value("Employee", filters['party'][0] , "employee_name")}}
 			</h4>
 
-			<h6>
-				{% for key, value in billing_address.items() %}
-					{% if value %}
-						<b>{{value}}</b><br>
-					{% endif %}
-				{% endfor %}
-			</h6>
+			
 
 			<h5 class="text-center">
 				Statement for period:

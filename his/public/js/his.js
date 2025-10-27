@@ -1510,11 +1510,7 @@ function receipt(party, outstanding, vat) {
 }
 
 function statementemployee(party) {
-	// account = ''
-	// if (!frappe.user_roles.includes("HR Manager")) {
-	// 	account = "2110 - Creditors - JSH"
-	// }
-	// alert(account)
+	
 
 	let d = new frappe.ui.Dialog({
 		title: 'Enter details',

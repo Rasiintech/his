@@ -205,6 +205,7 @@ doc_events = {
                 # "his.api.sales_invoice.real",
                 
                 "his.api.clinical_procedure.clinical_pro_comm",
+                "his.api.clinical_procedure.anes_comm",
                 
                 "his.api.radiology.create_radiolgy",
                 # "his.api.radiology.make_cytology",

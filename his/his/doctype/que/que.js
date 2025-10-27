@@ -11,6 +11,14 @@ frappe.ui.form.on('Que', {
 
         frm.set_value("paid_amount" , 0)
     },
+    bill_to_employee:function(frm){
+
+        frm.set_value("paid_amount" , 0)
+    },
+    bill_to_insurance:function(frm){
+
+        frm.set_value("paid_amount" , 0)
+    },
 
     discount: function (frm) {
 

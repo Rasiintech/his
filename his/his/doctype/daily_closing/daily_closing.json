@@ -96,6 +96,7 @@
   {
    "fieldname": "section_break_l0xam",
    "fieldtype": "Section Break",
+   "hidden": 1,
    "label": "Daily Commissions"
   },
   {
@@ -112,7 +113,8 @@
   {
    "fieldname": "balance",
    "fieldtype": "Currency",
-   "label": "Account Balance"
+   "label": "Account Balance",
+   "read_only": 1
   },
   {
    "fieldname": "column_break_hacma",
@@ -167,7 +169,7 @@
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2025-08-30 11:32:55.280741",
+ "modified": "2025-10-19 09:18:34.556368",
  "modified_by": "Administrator",
  "module": "HIS",
  "name": "Daily Closing",

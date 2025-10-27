@@ -1,18 +1,20 @@
 import frappe
 
 @frappe.whitelist()
-def transfer_ip(self, service_unit, check_in, leave_from):
+def transfer_ip(self, service_unit, check_in, leave_from, inpatient_type):
     self = frappe.get_doc("Inpatient Record" , self)
     if leave_from:
         patient_leave_service_unit(self, check_in, leave_from)
     if service_unit:
-        transfer_patient(self, service_unit, check_in)
+        transfer_patient(self, service_unit, check_in, inpatient_type)
 
 
-def transfer_patient(inpatient_record, service_unit, check_in):
+def transfer_patient(inpatient_record, service_unit, check_in, inpatient_type):
 	item_line = inpatient_record.append("inpatient_occupancies", {})
 	item_line.service_unit = service_unit
 	item_line.check_in = check_in
+	inpatient_record.bed = service_unit
+	inpatient_record.type = inpatient_type
 
 	inpatient_record.save(ignore_permissions=True)
 

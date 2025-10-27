@@ -269,6 +269,105 @@ def download_excel_report(company, customer, cost_center=None, account=None, fro
 
     # return {"file_url": file_doc.file_url}
 
+@frappe.whitelist()
+def customer_statement_details( company, customer_name,cost_center = None, account = None, from_date=None, to_date=None):
+    """Returns html for the report in PDF format"""
+
+    settings_doc = frappe.get_single("Customer Statements Sender")
+
+    if not from_date:
+        from_date = get_first_day(today()).strftime("%Y-%m-%d")
+    if not to_date:
+        to_date = today()
+
+    # Get General Ledger report content
+    report_gl = frappe.get_doc("Report", "General Ledger")
+   
+    
+    report_gl_filters = {
+        
+        "company": company,
+        "party_type": "Customer",
+        "party": [customer_name],
+        "from_date": from_date,
+        "to_date": to_date,
+        "group_by": "Group by Voucher (Consolidated)",
+    }
+    if  account:
+       report_gl_filters['account'] = [account]
+    if cost_center:
+       frappe.errprint(cost_center)
+       report_gl_filters['cost_center'] = [cost_center]
+    frappe.errprint(report_gl_filters)
+    columns_gl, data_gl = report_gl.get_data(
+        limit=500, user="Administrator", filters=report_gl_filters, as_dict=True
+    )
+
+    # Add serial numbers
+    columns_gl.insert(0, frappe._dict(fieldname="idx", label="", width="30px"))
+    for i in range(len(data_gl)):
+        data_gl[i]["idx"] = i + 1
+
+    # Get ageing summary report content
+    frappe.errprint(customer_name)
+    data_ageing = []
+    labels_ageing = []
+    if settings_doc.no_ageing != 1:
+        report_ageing = frappe.get_doc("Report", "Accounts Receivable Summary")
+        report_ageing_filters = {
+            "party_account" : account,
+            "company": company,
+            "ageing_based_on": "Posting Date",
+            "report_date": datetime.datetime.today(),
+            "range1": 30,
+            "range2": 60,
+            "range3": 90,
+            "range4": 120,
+            "customer": customer_name,
+        }
+        columns_ageing, data_ageing = report_ageing.get_data(
+            limit=50, user="Administrator", filters=report_ageing_filters, as_dict=True
+        )
+        labels_ageing = {}
+        for col in columns_ageing:
+            if "range" in col["fieldname"]:
+                labels_ageing[col["fieldname"]] = col["label"]
+
+    # Get Letter Head
+    no_letterhead = bool(
+        frappe.db.get_single_value("Customer Statements Sender", "no_letter_head")
+    )
+    letter_head = frappe._dict(
+        printview.get_letter_head(settings_doc, no_letterhead) or {}
+    )
+    if letter_head.content:
+        letter_head.content = frappe.utils.jinja.render_template(
+            letter_head.content, {"doc": settings_doc.as_dict()}
+        )
+
+    # Render Template
+    date_time = global_date_format(now()) + " " + format_time(now())
+    currency = frappe.db.get_value("Company", company, "default_currency")
+    report_html_data = frappe.render_template(
+        "his/templates/report/customer_statement.html",
+        {
+            "title": "Customer Statement for {0}".format(customer_name),
+            "description": "Customer Statement for {0}".format(customer_name),
+            "date_time": date_time,
+            "columns": columns_gl,
+            "data": data_gl,
+            "report_name": "Customer Statement for {0}".format(customer_name),
+            "filters": report_gl_filters,
+            "currency": currency,
+            "letter_head": letter_head.content,
+            "billing_address": [],
+            "labels_ageing": labels_ageing,
+            "data_ageing": data_ageing,
+        },
+    )
+
+    return report_html_data
+
 
 @frappe.whitelist()
 def get_report_content( company, customer_name,cost_center = None, account = None, from_date=None, to_date=None):

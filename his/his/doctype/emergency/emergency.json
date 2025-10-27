@@ -208,6 +208,7 @@
   {
    "fieldname": "ref_practitioner",
    "fieldtype": "Data",
+   "hidden": 1,
    "label": "Ref Practitioner"
   },
   {
@@ -541,7 +542,7 @@
  ],
  "is_submittable": 1,
  "links": [],
- "modified": "2025-04-12 10:25:44.889329",
+ "modified": "2025-10-21 11:45:23.878701",
  "modified_by": "Administrator",
  "module": "HIS",
  "name": "Emergency",

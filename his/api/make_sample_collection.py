@@ -50,10 +50,10 @@ def token_numebr(doc, method=None):
         if num == None:
             num = 0
         doc.token_no = int(num) + 1
-        last_col = frappe.db.sql("""SELECT lab_ref FROM `tabSample Collection` ORDER BY creation DESC LIMIT 1 """, as_dict=True)
-        if last_col and last_col[0].get('lab_ref'):
-            doc.lab_ref = int(last_col[0]['lab_ref']) + 1
-        # col = frappe.get_last_doc("Sample Collection")
-        # if col:
-        #     if col.lab_ref:
-        #         doc.lab_ref = int(col.lab_ref) + 1
+        # last_col = frappe.db.sql("""SELECT lab_ref FROM `tabSample Collection` ORDER BY creation DESC LIMIT 1 """, as_dict=True)
+        # if last_col and last_col[0].get('lab_ref'):
+        #     doc.lab_ref = int(last_col[0]['lab_ref']) + 1
+        # # col = frappe.get_last_doc("Sample Collection")
+        # # if col:
+        # #     if col.lab_ref:
+        # #         doc.lab_ref = int(col.lab_ref) + 1
