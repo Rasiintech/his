@@ -4,7 +4,7 @@ import json
 
 
 
-def admit_patient(inpatient_record, service_unit, check_in, expected_discharge=None):
+def admit_patient(inpatient_record, service_unit, check_in, inpatient_type, expected_discharge=None):
 	# validate_nursing_tasks(inpatient_record)
 
 	inpatient_record.admitted_datetime = check_in
@@ -12,7 +12,7 @@ def admit_patient(inpatient_record, service_unit, check_in, expected_discharge=N
 	inpatient_record.expected_discharge = expected_discharge
 
 	inpatient_record.set("inpatient_occupancies", [])
-	transfer_patient(inpatient_record, service_unit, check_in)
+	transfer_patient(inpatient_record, service_unit, check_in, inpatient_type)
 
 	frappe.db.set_value(
 		"Patient",
@@ -21,11 +21,12 @@ def admit_patient(inpatient_record, service_unit, check_in, expected_discharge=N
 	)
 
 
-def transfer_patient(inpatient_record, service_unit, check_in):
+def transfer_patient(inpatient_record, service_unit, check_in, inpatient_type):
 	item_line = inpatient_record.append("inpatient_occupancies", {})
 	item_line.service_unit = service_unit
 	item_line.check_in = check_in
 	item_line.invoiced = 1
+	item_line.inpatient_type = inpatient_type
 
 	inpatient_record.save(ignore_permissions=True)
 
@@ -51,7 +52,7 @@ def  admit_p(inp_doc, service_unit,patient, type, practitioner, is_insurance = "
 		ip_doc.save()
 	check_in = frappe.utils.now()
 	
-	admit_patient(ip_doc , service_unit , check_in , expected_discharge)
+	admit_patient(ip_doc , service_unit , check_in , type, expected_discharge)
 
 	ip = ip_doc
 	patientinfo = frappe.get_doc("Patient" , ip.patient)

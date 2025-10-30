@@ -13,6 +13,7 @@ def transfer_patient(inpatient_record, service_unit, check_in, inpatient_type):
 	item_line = inpatient_record.append("inpatient_occupancies", {})
 	item_line.service_unit = service_unit
 	item_line.check_in = check_in
+	item_line.inpatient_type = inpatient_type
 	inpatient_record.bed = service_unit
 	inpatient_record.type = inpatient_type
 

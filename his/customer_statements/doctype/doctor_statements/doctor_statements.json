@@ -205,12 +205,13 @@
    "fieldname": "doctor",
    "fieldtype": "Link",
    "label": "Doctor",
-   "options": "Healthcare Practitioner"
+   "options": "Healthcare Practitioner",
+   "read_only": 1
   }
  ],
  "issingle": 1,
  "links": [],
- "modified": "2025-10-22 14:51:06.241249",
+ "modified": "2025-10-27 13:05:43.373864",
  "modified_by": "Administrator",
  "module": "Customer Statements",
  "name": "Doctor Statements",
