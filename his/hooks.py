@@ -18,7 +18,7 @@ app_include_css = [
     ]
 app_include_js = [
     "/assets/his/js/his.js",
-    "assets/his/js/SigWebTablet.js"
+    # "assets/his/js/SigWebTablet.js"
     # "/assets/his/js/tabulator.js",
     ]
 

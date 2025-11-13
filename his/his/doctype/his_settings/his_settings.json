@@ -19,7 +19,10 @@
   "free_que_expense_account",
   "membership_settings_section",
   "last_card_number",
-  "default_customer_group"
+  "default_customer_group",
+  "discount_levels_section",
+  "discount_account",
+  "payment_entry_discount_level"
  ],
  "fields": [
   {
@@ -103,12 +106,29 @@
    "fieldtype": "Link",
    "label": "Default Customer Group",
    "options": "Customer Group"
+  },
+  {
+   "fieldname": "discount_levels_section",
+   "fieldtype": "Section Break",
+   "label": "Discount Levels"
+  },
+  {
+   "fieldname": "payment_entry_discount_level",
+   "fieldtype": "Table",
+   "label": "Payment Entry Discount Level",
+   "options": "PE Discount Level"
+  },
+  {
+   "fieldname": "discount_account",
+   "fieldtype": "Link",
+   "label": "Default PE Discount Account",
+   "options": "Account"
   }
  ],
  "index_web_pages_for_search": 1,
  "issingle": 1,
  "links": [],
- "modified": "2025-10-19 09:05:32.479810",
+ "modified": "2025-11-11 12:09:15.646944",
  "modified_by": "Administrator",
  "module": "HIS",
  "name": "HIS Settings",

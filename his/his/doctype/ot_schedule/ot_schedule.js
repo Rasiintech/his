@@ -292,6 +292,22 @@ frappe.ui.form.on('OT Schedule', {
 			//  }, 5);}})
 			// },);
 		} 
+
+		if (!frm.is_new()){
+			frm.add_custom_button('Print Consent Form', () => {
+				// let url= `${frappe.urllib.get_base_url()}/printview?doctype=Surgery%20Preparation&name=${frm.doc.name}&trigger_print=1&format=Surgery%20Preparation%20Consent&no_letterhead=0&letterhead=logo&settings=%7B%7D&_lang=en`;
+				//      window.open(url, '_blank');
+				if(frm.doc.consent_form){
+					// frappe.set_route("Consent Surgery Form" , )
+					frappe.set_route('Form', 'Consent Surgery Form', frm.doc.consent_form);
+				}
+				else{
+					frappe.new_doc("Consent Surgery Form" , {"patient" : frm.doc.patient , "surgery_type" : frm.doc.procedure , "surgery_preparation" : frm.doc.name})
+		
+				}
+			
+			})
+		}
 	},
 
 	patient: function(frm) {

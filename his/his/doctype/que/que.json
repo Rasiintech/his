@@ -42,6 +42,8 @@
   "bill_to_insurance",
   "insurance",
   "follow_up",
+  "is_campaign",
+  "campaign_percentage",
   "is_package",
   "date",
   "time",
@@ -441,6 +443,21 @@
    "fieldtype": "Data",
    "label": "Membership No",
    "read_only": 1
+  },
+  {
+   "default": "0",
+   "fetch_from": "practitioner.is_campaign",
+   "fieldname": "is_campaign",
+   "fieldtype": "Check",
+   "label": "Is Campaign",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "practitioner.campaign_percentage",
+   "fieldname": "campaign_percentage",
+   "fieldtype": "Percent",
+   "label": "Campaign Percentage",
+   "read_only": 1
   }
  ],
  "index_web_pages_for_search": 1,
@@ -451,7 +468,7 @@
    "link_fieldname": "patient"
   }
  ],
- "modified": "2025-10-28 14:20:16.669973",
+ "modified": "2025-11-10 10:18:24.005215",
  "modified_by": "Administrator",
  "module": "HIS",
  "name": "Que",
