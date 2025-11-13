@@ -293,6 +293,7 @@ fixtures = [
         "Custom Field",
         # "Property Setter",
         "Print Format",
+        "Workflow",
         # "Home Page"  # Uncomment if needed
     ]
 ] + [
