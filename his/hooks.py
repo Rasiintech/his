@@ -8,6 +8,10 @@ app_email = "rasiin"
 app_license = "MIT"
 required_apps = ["erpnext","healthcare"]
 
+from his.monkey_patches import workflow as workflow_patches
+workflow_patches.apply()
+
+
 # Includes in <head>
 # ------------------
 

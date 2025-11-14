@@ -44,7 +44,7 @@ def after_install():
     delate_genders()
     accounts_creations()
     create_his_accounts()
-    # Create_mode_of_payment()
+    Create_mode_of_payment()
     sources_creations()
     roles_creations()
     frappe.db.commit()
@@ -568,20 +568,20 @@ def accounts_creations():
             frappe.db.commit()   
 
 
-# def Create_mode_of_payment():
-#     if not frappe.db.exists("Mode of Payment" ,"Free"):
-#         mode_of_payment = frappe.get_doc({
-#             "doctype" : "Mode of Payment",
-#             "mode_of_payment" : "Free",
-#             "type" : "Cash",
-#             "accounts" : [{
-#                 "company": frappe.defaults.get_user_default("company"),
-#                 "default_account": "Free Que - "+ abbr
-#             }]
-#         })
+def Create_mode_of_payment():
+    if not frappe.db.exists("Mode of Payment" ,"Free"):
+        mode_of_payment = frappe.get_doc({
+            "doctype" : "Mode of Payment",
+            "mode_of_payment" : "Free",
+            "type" : "Cash",
+            "accounts" : [{
+                "company": frappe.defaults.get_user_default("company"),
+                "default_account": "Free Que - "+ abbr
+            }]
+        })
     
-#         mode_of_payment.save()
-#         frappe.db.commit()    
+        mode_of_payment.save()
+        frappe.db.commit()    
 
 def sources_creations():
     for i in ["IPD","OPD","WP","E.R", "PACKAGE", "Que"]:
