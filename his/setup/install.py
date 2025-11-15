@@ -51,7 +51,7 @@ def after_install():
     sources_creations()
     roles_creations()
     frappe.db.commit()
-    
+
     # create_workspace()
     print("*****  Succesfully Created all Setups and Defaults! Alhamdulilaah  ******")
     print("#############################################")
@@ -559,7 +559,7 @@ def delate_genders():
 
 def accounts_creations():
    
-    for i in ["Discount"]:
+    for i in ["Discount", "Free Que"]:
         if not frappe.db.exists("Account" ,i+' - '+abbr):
             account_creation = frappe.get_doc({
                 "doctype" : "Account",
