@@ -20,7 +20,6 @@ cost_center = frappe.db.get_value('Company', company, 'round_off_cost_center')
 def after_install():
     make_custom_fields()
     make_custom_roles()
-
     make_property_setters()
     set_system_setting()
     create_users()
@@ -29,12 +28,19 @@ def after_install():
     healthcare_setting()
     accounting_setting()
     website_setting()
-    # create_workspace()
 
     create_account_for_item_group()
     create_item_groups()
     create_consultation_item()
+
+    # Make sure the accounts exist first
+    accounts_creations()
+    create_his_accounts()
+    # (optionally create_cash_accounts() here if you plan to use it)
+
+    # Now it’s safe to link those accounts
     create_mode_of_payment()
+    Create_mode_of_payment()
     create_pos_profile()
 
     create_so_types()
@@ -42,12 +48,11 @@ def after_install():
     create_user_permision()
     translate_gender()
     delate_genders()
-    accounts_creations()
-    create_his_accounts()
-    Create_mode_of_payment()
     sources_creations()
     roles_creations()
     frappe.db.commit()
+    
+    # create_workspace()
     print("*****  Succesfully Created all Setups and Defaults! Alhamdulilaah  ******")
     print("#############################################")
     print("*********** Tommorow is not Just another day! ********")
