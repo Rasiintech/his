@@ -145,13 +145,25 @@ doc_events = {
     },
     # his/his/doctype/sales_invoice/sales_invoice_refund_control.py
     "Lab Result": {
-        "on_submit": "his.his.doctype.sales_invoice.sales_invoice_refund_control.update_lab_results_status",
-        "on_cancel": "his.his.doctype.sales_invoice.sales_invoice_refund_control.handle_lab_result_cancellation",
+        "on_submit": [
+            "his.his.doctype.sales_invoice.sales_invoice_refund_control.update_lab_results_status",
+            "his.commission.work_handlers.on_submit_lab_result"
+        ],
+        "on_cancel": [
+            "his.his.doctype.sales_invoice.sales_invoice_refund_control.handle_lab_result_cancellation",
+            "his.commission.work_handlers.on_cancel_lab_result"
+            ]
     },
     
     "Radiology": {
-        "on_submit": "his.his.doctype.sales_invoice.sales_invoice_refund_control.update_imaging_results_status",
-        "on_cancel": "his.his.doctype.sales_invoice.sales_invoice_refund_control.handle_imaging_result_cancellation"
+        "on_submit": [
+            "his.his.doctype.sales_invoice.sales_invoice_refund_control.update_imaging_results_status",
+            "his.commission.work_handlers.on_submit_radiology"
+            ],
+        "on_cancel": [
+            "his.his.doctype.sales_invoice.sales_invoice_refund_control.handle_imaging_result_cancellation",
+            "his.commission.work_handlers.on_cancel_radiology"
+            ]
     },
     
     
@@ -196,9 +208,15 @@ doc_events = {
    # "Customer" : {
     #"before_insert" : "his.api.credit_limit.credit_limit"
 	#},
-    # "Clinical Procedure":{
+    "Clinical Procedure":{
     #     "after_insert": "his.api.clinical_procedure.ot_schedule",
-    # },
+        "on_submit": [
+            "his.commission.work_handlers.on_submit_clinical_procedure"
+        ],
+        "on_cancel": [
+            "his.commission.work_handlers.on_cancel_clinical_procedure"
+        ]
+    },
     "Sales Invoice": {
             "on_submit": [
 
@@ -208,18 +226,24 @@ doc_events = {
                 "his.api.make_sample_collection.make_sample_collection",
                 # "his.api.sales_invoice.real",
                 
-                "his.api.clinical_procedure.clinical_pro_comm",
-                "his.api.clinical_procedure.anes_comm",
+                # "his.api.clinical_procedure.clinical_pro_comm",
+                # "his.api.clinical_procedure.anes_comm",
                 
                 "his.api.radiology.create_radiolgy",
                 # "his.api.radiology.make_cytology",
                 # "his.api.ot_prepation.make_ot_prepararion",
                 "his.api.egd.make_egd",
-                "his.api.clinical_procedure.make_procedures"
+                "his.api.clinical_procedure.make_procedures",
+                "his.commission.work_handlers.on_submit_sales_invoice",
+                "his.commission.invoice_return_handlers.create_commission_reversal_for_return",
                 
                 ],
                 # "before_cancel" : "his.api.journal_entry.cancell_journal"
                 # "before_cancel": "his.his.doctype.sales_invoice.sales_invoice_refund_control.validate_refund"
+                "on_cancel": [
+                    "his.commission.invoice_handlers.cancel_commission_for_invoice",
+                    "his.commission.invoice_return_handlers.cancel_commission_reversal_for_return",
+                ]
             
     },
     "Stock Reconciliation" : {

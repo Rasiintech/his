@@ -75,7 +75,8 @@ def create_lab_tests(doc , method = None):
 								"conversion_factor": template.conversion_factor,
 								"normal_range": template.lab_test_normal_range,
 								"require_result_value": 1,
-								"allow_blank ":0
+								"allow_blank ":0,
+								"sales_invoice_item": item.name
 							}
 						)
 
@@ -159,7 +160,8 @@ def create_lab_tests(doc , method = None):
 					"template" : template.name,
 					"lab_test_name" : template.name,
 					"type" : "Group",
-					"reff_collection": doc.name
+					"reff_collection": doc.name,
+					"sales_invoice_item": item.name
 					
 					})
 					lab_test.insert()
@@ -212,7 +214,8 @@ def create_lab_tests(doc , method = None):
 					"template" : template.name,
 					"lab_test_name" : template.name,
 					"type" : "Group",
-					"reff_collection": doc.name
+					"reff_collection": doc.name,
+					"sales_invoice_item": item.name
 					
 					})
 		
@@ -254,7 +257,7 @@ def create_lab_tests(doc , method = None):
 					"lab_ref" : doc.lab_ref,
 					'normal_test_items' : hor_lab_test_itmes,
 					"reff_collection": doc.name,
-				
+					
 					"type" : "Hormones"
 					
 					})

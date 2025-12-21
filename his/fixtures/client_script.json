@@ -2,6 +2,17 @@
  {
   "docstatus": 0,
   "doctype": "Client Script",
+  "dt": "Patient",
+  "enabled": 1,
+  "modified": "2025-12-18 11:00:40.081710",
+  "module": "HIS",
+  "name": "Age Calculation for Patient",
+  "script": "frappe.ui.form.on(\"Patient\", {\r\n  p_age(frm) {\r\n    sync_dob_from_age(frm);\r\n  },\r\n  age_type(frm) {\r\n    sync_dob_from_age(frm);\r\n  },\r\n  dob(frm) {\r\n    sync_age_from_dob(frm);\r\n  },\r\n});\r\n\r\nasync function sync_dob_from_age(frm) {\r\n  if (frm.__age_syncing) return;\r\n\r\n  const age_type = (frm.doc.age_type || \"\").trim(); // Year/Month/Day\r\n  const age = parseInt(frm.doc.p_age, 10);\r\n\r\n  if (!age_type || !Number.isFinite(age) || age <= 0) return;\r\n\r\n  frm.__age_syncing = true;\r\n  try {\r\n    const today = moment(frappe.datetime.get_today(), \"YYYY-MM-DD\");\r\n    let dob;\r\n\r\n    if (age_type === \"Year\") {\r\n      dob = today.clone().subtract(age, \"years\").startOf(\"year\");\r\n    } else if (age_type === \"Month\") {\r\n      dob = today.clone().subtract(age, \"months\").startOf(\"month\");\r\n    } else if (age_type === \"Day\") {\r\n      dob = today.clone().subtract(age, \"days\");\r\n    } else {\r\n      return;\r\n    }\r\n\r\n    await frm.set_value(\"dob\", dob.format(\"YYYY-MM-DD\"));\r\n  } finally {\r\n    frm.__age_syncing = false;\r\n  }\r\n}\r\n\r\nasync function sync_age_from_dob(frm) {\r\n  if (frm.__age_syncing) return;\r\n  if (!frm.doc.dob) return;\r\n\r\n  frm.__age_syncing = true;\r\n  try {\r\n    const today = moment(frappe.datetime.get_today(), \"YYYY-MM-DD\");\r\n    const dob = moment(frm.doc.dob, \"YYYY-MM-DD\");\r\n\r\n    if (!dob.isValid()) return;\r\n    if (dob.isAfter(today)) {\r\n      await frm.set_value(\"p_age\", null);\r\n      return;\r\n    }\r\n\r\n    const years = today.diff(dob, \"years\");\r\n    const months = today.diff(dob, \"months\");\r\n    const days = today.diff(dob, \"days\");\r\n\r\n    if (years >= 2) {\r\n      await frm.set_value(\"age_type\", \"Year\");\r\n      await frm.set_value(\"p_age\", years);\r\n    } else if (months >= 1) {\r\n      await frm.set_value(\"age_type\", \"Month\");\r\n      await frm.set_value(\"p_age\", months);\r\n    } else {\r\n      await frm.set_value(\"age_type\", \"Day\");\r\n      await frm.set_value(\"p_age\", days);\r\n    }\r\n  } finally {\r\n    frm.__age_syncing = false;\r\n  }\r\n}\r\n",
+  "view": "Form"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Client Script",
   "dt": "Sales Order",
   "enabled": 1,
   "modified": "2025-10-26 15:43:59.747298",

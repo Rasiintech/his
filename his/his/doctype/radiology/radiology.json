@@ -34,13 +34,17 @@
   "report_preference",
   "source_order",
   "reff_invoice",
+  "sales_invoice_item",
   "invoice_status",
   "patient_encounter",
   "att",
   "amended_from",
   "atta",
   "attachments",
-  "token_no"
+  "token_no",
+  "journal_entry",
+  "commission_posted",
+  "commission_posting_date"
  ],
  "fields": [
   {
@@ -152,9 +156,8 @@
    "fieldname": "reff_invoice",
    "fieldtype": "Link",
    "hidden": 1,
-   "label": "reff_invoice",
-   "options": "Sales Invoice",
-   "read_only": 1
+   "label": "Sales Invoice",
+   "options": "Sales Invoice"
   },
   {
    "fieldname": "source_order",
@@ -267,12 +270,39 @@
    "fieldtype": "Data",
    "label": "Doctor Name",
    "read_only": 1
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "sales_invoice_item",
+   "fieldtype": "Link",
+   "label": "Sales Invoice Item",
+   "options": "Sales Invoice Item"
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "journal_entry",
+   "fieldtype": "Link",
+   "label": "Journal Entry",
+   "options": "Journal Entry"
+  },
+  {
+   "default": "0",
+   "fieldname": "commission_posted",
+   "fieldtype": "Check",
+   "label": "Commission Posted",
+   "read_only": 1
+  },
+  {
+   "fieldname": "commission_posting_date",
+   "fieldtype": "Date",
+   "label": "Commission Posting Date",
+   "read_only": 1
   }
  ],
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2025-07-15 16:48:12.816301",
+ "modified": "2025-12-16 12:26:21.824315",
  "modified_by": "Administrator",
  "module": "HIS",
  "name": "Radiology",

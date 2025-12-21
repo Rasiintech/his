@@ -7,16 +7,23 @@
  "editable_grid": 1,
  "engine": "InnoDB",
  "field_order": [
+  "commission_section_section",
   "allow_comm_doc",
   "doctor_commission_account",
   "doctor_exp_account",
   "column_break_9s3vs",
-  "allow_bill_to_employee",
-  "employee_due",
+  "allow_split_on_requesting_percentage",
+  "allow_commission_on_sc",
+  "allow_commission_on_si",
   "section_break_ezhz1",
+  "invoice_commission_item_groups",
+  "section_break_bwptp",
   "allow_transfer_balance",
   "free_que_expense",
   "free_que_expense_account",
+  "column_break_k5g13",
+  "allow_bill_to_employee",
+  "employee_due",
   "membership_settings_section",
   "last_card_number",
   "default_customer_group",
@@ -123,12 +130,48 @@
    "fieldtype": "Link",
    "label": "Default PE Discount Account",
    "options": "Account"
+  },
+  {
+   "fieldname": "invoice_commission_item_groups",
+   "fieldtype": "Table",
+   "label": "Invoice Commission Item Groups",
+   "options": "Invoice Commission Item Groups"
+  },
+  {
+   "fieldname": "commission_section_section",
+   "fieldtype": "Section Break",
+   "label": "Commission Section"
+  },
+  {
+   "fieldname": "section_break_bwptp",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "column_break_k5g13",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "allow_split_on_requesting_percentage",
+   "fieldtype": "Data",
+   "label": "Allow Split on Requesting Percentage"
+  },
+  {
+   "default": "0",
+   "fieldname": "allow_commission_on_sc",
+   "fieldtype": "Check",
+   "label": "Allow Commission on SC"
+  },
+  {
+   "default": "0",
+   "fieldname": "allow_commission_on_si",
+   "fieldtype": "Check",
+   "label": "Allow Commission on SI"
   }
  ],
  "index_web_pages_for_search": 1,
  "issingle": 1,
  "links": [],
- "modified": "2025-11-14 14:03:25.040028",
+ "modified": "2025-12-21 08:20:54.823140",
  "modified_by": "Administrator",
  "module": "HIS",
  "name": "HIS Settings",

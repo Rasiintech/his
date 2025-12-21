@@ -19,7 +19,8 @@ def create_radiolgy(doc, method=None):
 			'eximination': frappe.db.get_value("Radiology Template" , {"item": i.item_code},"name"),
 			'practitioner' : doc.ref_practitioner,
 			'reff_invoice' : doc.name,
-			'source_order' : doc.source_order
+			'source_order' : doc.source_order,
+			"sales_invoice_item": i.name
 			})
 			# frappe.msgprint("OK")
 			rad_doc.insert(ignore_permissions=True)

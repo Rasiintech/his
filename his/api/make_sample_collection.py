@@ -12,7 +12,8 @@ def make_sample_collection(doc, method=None , items = None):
                 itms.append(
                             {
                             "lab_test": frappe.db.get_value("Lab Test Template", {"item":i.item_code},"name"),
-                            "department": frappe.db.get_value("Lab Test Template", {"item":i.item_code},"department")
+                            "department": frappe.db.get_value("Lab Test Template", {"item":i.item_code},"department"),
+                            "sales_invoice_item": i.name
 
                             
                 }

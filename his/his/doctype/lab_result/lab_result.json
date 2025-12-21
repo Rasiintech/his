@@ -61,7 +61,12 @@
   "prescription",
   "lab_test_name",
   "reff_collection",
-  "amended_from"
+  "sales_invoice",
+  "sales_invoice_item",
+  "amended_from",
+  "journal_entry",
+  "commission_posted",
+  "commission_posting_date"
  ],
  "fields": [
   {
@@ -406,7 +411,7 @@
   {
    "fieldname": "reff_collection",
    "fieldtype": "Link",
-   "label": "reff_collection",
+   "label": "Sample Collection",
    "options": "Sample Collection"
   },
   {
@@ -459,12 +464,47 @@
    "fieldtype": "Text",
    "label": "Collection Details",
    "read_only": 1
+  },
+  {
+   "fieldname": "sales_invoice_item",
+   "fieldtype": "Link",
+   "label": "Sales Invoice Item",
+   "options": "Sales Invoice Item",
+   "read_only": 1
+  },
+  {
+   "fieldname": "journal_entry",
+   "fieldtype": "Link",
+   "label": "Journal Entry",
+   "options": "Journal Entry",
+   "read_only": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "commission_posted",
+   "fieldtype": "Check",
+   "label": "Commission Posted",
+   "read_only": 1
+  },
+  {
+   "fieldname": "commission_posting_date",
+   "fieldtype": "Date",
+   "label": "Commission Posting Date",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "reff_collection.reff_invoice",
+   "fieldname": "sales_invoice",
+   "fieldtype": "Link",
+   "label": "Sales Invoice",
+   "options": "Sales Invoice",
+   "read_only": 1
   }
  ],
  "in_create": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2025-01-05 17:08:51.617557",
+ "modified": "2025-12-14 10:43:48.630001",
  "modified_by": "Administrator",
  "module": "HIS",
  "name": "Lab Result",
