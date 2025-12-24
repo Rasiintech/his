@@ -3,7 +3,12 @@
 from __future__ import annotations
 
 import frappe
-from .work_commission import post_commission_for_invoice_items, cancel_commission_for_work_doc, post_commission_split_for_clinical_procedure
+from .work_commission import (
+    post_commission_for_invoice_items, 
+    cancel_commission_for_work_doc, 
+    post_commission_split_for_clinical_procedure, 
+    _allow_commission_on_sample_collection
+)
 
 
 # ------------------------------------------------------------
@@ -68,8 +73,15 @@ def on_submit_clinical_procedure(doc, method=None):
 def on_cancel_clinical_procedure(doc, method=None):
     cancel_commission_for_work_doc(doc)
 
+# ------------------------------------------------------------
+# Lab Result commission 
+# ------------------------------------------------------------
 
 def on_submit_lab_result(doc, method=None):
+    # If commission is configured to run on Sample Collection, do nothing here
+    if _allow_commission_on_sample_collection():
+        return
+
     if getattr(doc, "journal_entry", None):
         return
 
@@ -79,17 +91,14 @@ def on_submit_lab_result(doc, method=None):
 
     invoice_items = []
 
-    # If stored on parent:
     if getattr(doc, "sales_invoice_item", None):
         invoice_items.append(doc.sales_invoice_item)
 
-    # Child rows (your normal_test_items table)
     for row in (getattr(doc, "normal_test_items", None) or []):
         sii = getattr(row, "sales_invoice_item", None)
         if sii:
             invoice_items.append(sii)
 
-    # Deduplicate
     invoice_items = list(dict.fromkeys([x for x in invoice_items if x]))
     if not invoice_items:
         return
@@ -106,6 +115,48 @@ def on_submit_lab_result(doc, method=None):
         doc.db_set("journal_entry", je.name)
 
 def on_cancel_lab_result(doc, method=None):
+    cancel_commission_for_work_doc(doc)
+
+
+# ------------------------------------------------------------
+# Sample Collection commission 
+# ------------------------------------------------------------
+def on_submit_sample_collection(doc, method=None):
+    if not _allow_commission_on_sample_collection():
+        return
+
+    if getattr(doc, "journal_entry", None):
+        return
+
+    sales_invoice = getattr(doc, "reff_invoice", None)
+    if not sales_invoice or not getattr(doc, "practitioner", None):
+        return
+
+    invoice_items = []
+
+    for row in (getattr(doc, "lab_test", None) or []):
+        sii = getattr(row, "sales_invoice_item", None)
+        if sii:
+            invoice_items.append(sii)
+
+    invoice_items = list(dict.fromkeys([x for x in invoice_items if x]))
+    if not invoice_items:
+        return
+
+
+    je = post_commission_for_invoice_items(
+        sales_invoice=sales_invoice,
+        invoice_item_names=invoice_items,
+        practitioner=doc.practitioner,
+        work_doctype=doc.doctype,
+        work_name=doc.name,
+        posting_date=getattr(doc, "date", None),
+    )
+    if je:
+        doc.db_set("journal_entry", je.name)
+
+
+def on_cancel_sample_collection(doc, method=None):
     cancel_commission_for_work_doc(doc)
 
 # ------------------------------------------------------------

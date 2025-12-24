@@ -34,12 +34,14 @@
  "fields": [
   {
    "default": "0",
+   "description": "Enable automatic posting of doctor commission Journal Entries for eligible work documents (Invoice/Lab/Procedure/Imaging, etc.).",
    "fieldname": "allow_comm_doc",
    "fieldtype": "Check",
    "label": "Allow Commission for Doctor"
   },
   {
    "depends_on": "eval:doc.allow_comm_doc",
+   "description": "Payable/Liability account used on the credit side when posting doctor commission (credited per Employee/Doctor).",
    "fieldname": "doctor_commission_account",
    "fieldtype": "Link",
    "label": "Doctor Commission Account ",
@@ -48,6 +50,7 @@
   },
   {
    "depends_on": "eval:doc.allow_comm_doc",
+   "description": "Expense account used on the debit side when posting doctor commission (total commission expense).",
    "fieldname": "doctor_exp_account",
    "fieldtype": "Link",
    "label": "Doctor Exp Account",
@@ -132,6 +135,7 @@
    "options": "Account"
   },
   {
+   "description": "Item Groups whose commission is posted directly from Sales Invoice submit (invoice is treated as the \u201cwork done\u201d document). Use for auto-billed items like Rooms/Night charges and Appointments. Other Item Groups (Lab/Imaging/Procedure) are handled by their own doctypes and are not posted from the invoice.",
    "fieldname": "invoice_commission_item_groups",
    "fieldtype": "Table",
    "label": "Invoice Commission Item Groups",
@@ -144,19 +148,23 @@
   },
   {
    "fieldname": "section_break_bwptp",
-   "fieldtype": "Section Break"
+   "fieldtype": "Section Break",
+   "hidden": 1
   },
   {
    "fieldname": "column_break_k5g13",
    "fieldtype": "Column Break"
   },
   {
+   "default": "0",
+   "description": "If checked, Performing Doctor % is calculated from the Requesting Doctor\u2019s commission share (requesting pool), not from the full procedure amount.",
    "fieldname": "allow_split_on_requesting_percentage",
-   "fieldtype": "Data",
+   "fieldtype": "Check",
    "label": "Allow Split on Requesting Percentage"
   },
   {
    "default": "0",
+   "description": "If checked, commission is posted on Sample Collection Submit. If unchecked, commission is posted on Lab Result Submit (to avoid duplicates).",
    "fieldname": "allow_commission_on_sc",
    "fieldtype": "Check",
    "label": "Allow Commission on SC"
@@ -171,7 +179,7 @@
  "index_web_pages_for_search": 1,
  "issingle": 1,
  "links": [],
- "modified": "2025-12-21 08:20:54.823140",
+ "modified": "2025-12-21 14:59:48.762586",
  "modified_by": "Administrator",
  "module": "HIS",
  "name": "HIS Settings",

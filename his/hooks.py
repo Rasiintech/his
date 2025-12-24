@@ -191,10 +191,17 @@ doc_events = {
         
         
     # },
-        "Sample Collection": {
-        "before_insert": ["his.api.make_sample_collection.token_numebr"],
-        "on_submit": ["his.api.create_lab_test.create_lab_tests"]
-      
+    "Sample Collection": {
+        "before_insert": [
+            "his.api.make_sample_collection.token_numebr"
+            ],
+        "on_submit": [
+            "his.api.create_lab_test.create_lab_tests",
+            "his.commission.work_handlers.on_submit_sample_collection"
+            ],
+        "on_cancel": [
+            "his.commission.work_handlers.on_cancel_sample_collection"
+            ],
         
     },
     "Patient": {

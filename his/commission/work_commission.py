@@ -265,6 +265,13 @@ def _get_commission_rows_by_group_from_doc(parent_doc, child_field="commission")
         })
     return by_group
 
+def _allow_commission_on_sample_collection() -> bool:
+    """True => commission should happen on Sample Collection, not on Lab Result."""
+    try:
+        return bool(frappe.db.get_single_value("HIS Settings", "allow_commission_on_sc"))
+    except Exception:
+        return False
+
 
 def _compute_commission_percent_and_desc(by_group, item_group: str, source_order: str):
     """
@@ -368,47 +375,100 @@ def post_commission_split_for_clinical_procedure(doc):
         anes_pct, anes_desc = _compute_commission_percent_and_desc(anes_by_group, item_group, source_order)
 
     # ---- apply your rule: requesting reduced by performing (only if different) ----
-    req_effective_pct = req_pct
-    if performing and performing != requesting:
-        req_effective_pct = max(0.0, req_pct - perf_pct)
+    # ------------------------------------------------------------
+    # Split logic switch:
+    #   - If allow_split_on_requesting_percentage = 0:
+    #       Performing % is based on FULL procedure base_amount
+    #       Requesting % is reduced by Performing % (your current logic)
+    #
+    #   - If allow_split_on_requesting_percentage = 1:
+    #       Performing % is based on REQUESTING AMOUNT (req_pct% of base_amount)
+    #       Requesting keeps the remainder of their pool after Performing cut
+    # ------------------------------------------------------------
+    split_on_requesting_pool = bool(getattr(his_settings, "allow_split_on_requesting_percentage", 0))
 
-    # ---- build payees with AMOUNTS from percents ----
     payees = []
 
-    req_amt = (req_effective_pct / 100.0) * base_amount
+    # Always compute anesthesia from full base_amount (unchanged)
+    anes_amt = 0.0
+    if anesth:
+        anes_amt = (max(0.0, float(anes_pct)) / 100.0) * base_amount
+
+    # ---------- Requesting / Performing ----------
+    # Base requesting pool (Requesting doctor's configured percent of procedure)
+    req_pool_amt = (max(0.0, float(req_pct)) / 100.0) * base_amount
+
+    perf_amt = 0.0
+    req_amt = 0.0
+
+    if performing and performing != requesting and perf_pct:
+        perf_pct_sane = max(0.0, float(perf_pct))
+
+        if split_on_requesting_pool:
+            # Performing cut comes from requesting pool (e.g. 10% of 600 = 60)
+            perf_amt = (perf_pct_sane / 100.0) * req_pool_amt
+
+            # Don’t allow performing to exceed requesting pool
+            if perf_amt > req_pool_amt:
+                perf_amt = req_pool_amt
+
+            req_amt = req_pool_amt - perf_amt
+
+            req_rule_desc = (
+                f"{req_desc} | pool={req_pct:g}% of base ({req_pool_amt:g}) | "
+                f"effective={req_amt:g} after perf cut ({perf_pct_sane:g}% of pool = {perf_amt:g})"
+            )
+            perf_rule_desc = (
+                f"{perf_desc} | pct={perf_pct_sane:g}% of REQUESTING pool ({req_pool_amt:g})"
+            )
+        else:
+            # Current behavior: performing cut is based on full procedure base_amount
+            perf_amt = (perf_pct_sane / 100.0) * base_amount
+
+            # Requesting reduced by performing percentage (pct math, your original rule)
+            req_effective_pct = max(0.0, float(req_pct) - float(perf_pct_sane))
+            req_amt = (req_effective_pct / 100.0) * base_amount
+
+            req_rule_desc = (
+                f"{req_desc} | effective={req_effective_pct:g}% (orig {req_pct:g}% - perf {perf_pct_sane:g}%)"
+            )
+            perf_rule_desc = f"{perf_desc} | pct={perf_pct_sane:g}%"
+    else:
+        # No performing doctor (or same as requesting) => requesting gets full requesting pool
+        req_amt = req_pool_amt
+        req_rule_desc = f"{req_desc} | pct={req_pct:g}% (no performing cut)"
+
+    # ---- Add payees (same JE behavior as before) ----
     if req_amt:
         payees.append({
             "role": "Requesting",
             "employee": req_emp,
             "ref": requesting,
-            "amount": req_amt,
-            "rule_desc": f"{req_desc} | effective={req_effective_pct:g}% (orig {req_pct:g}% - perf {perf_pct:g}%)" if (performing and performing != requesting) else f"{req_desc} | effective={req_effective_pct:g}%",
+            "amount": float(req_amt),
+            "rule_desc": req_rule_desc,
         })
 
-    if performing and performing != requesting:
-        perf_amt = (perf_pct / 100.0) * base_amount
-        if perf_amt:
-            payees.append({
-                "role": "Performing",
-                "employee": perf_emp,
-                "ref": performing,
-                "amount": perf_amt,
-                "rule_desc": f"{perf_desc} | pct={perf_pct:g}%",
-            })
+    if performing and performing != requesting and perf_amt:
+        payees.append({
+            "role": "Performing",
+            "employee": perf_emp,
+            "ref": performing,
+            "amount": float(perf_amt),
+            "rule_desc": perf_rule_desc,
+        })
 
-    if anesth:
-        anes_amt = (anes_pct / 100.0) * base_amount
-        if anes_amt:
-            payees.append({
-                "role": "Anesthesia",
-                "employee": anes_emp,
-                "ref": anesth,
-                "amount": anes_amt,
-                "rule_desc": f"{anes_desc} | pct={anes_pct:g}%",
-            })
+    if anesth and anes_amt:
+        payees.append({
+            "role": "Anesthesia",
+            "employee": anes_emp,
+            "ref": anesth,
+            "amount": float(anes_amt),
+            "rule_desc": f"{anes_desc} | pct={anes_pct:g}% (of base)",
+        })
 
     if not payees:
         return None
+
 
     total_all = sum(float(p["amount"]) for p in payees)
     if not total_all:
