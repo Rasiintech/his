@@ -1,0 +1,17 @@
+{
+  "db_name": "_7d43cf58dceca9d7",
+  "db_password": "blRqFhc1RIn71dy5",
+  "db_type": "mariadb",
+  "developer_mode": 1,
+  "encryption_key": "i8PPhiujkILO3fGi88LB3mdXPtRHUqQVVzi9dmetlR8=",
+  "user_type_doctype_limit": {
+    "employee_self_service": 20
+  },
+  "legacy_smartfinancial": {
+    "host": "10.10.6.249",
+    "port": 3306,
+    "user": "frappe_ro",
+    "password": "Shaafi2020",
+    "database": "smartfinancial"
+  }
+}
