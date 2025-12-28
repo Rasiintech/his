@@ -1,9 +1,9 @@
-// his/his/legacy/legacy_lab_results.js
+// his/his/legacy/legacy_vitals.js
 
-frappe.pages["legacy-lab-results"].on_page_load = function (wrapper) {
+frappe.pages["legacy-vitals"].on_page_load = function (wrapper) {
   const page = frappe.ui.make_app_page({
     parent: wrapper,
-    title: __("Legacy Lab Results"),
+    title: __("Legacy Vitals"),
     single_column: true,
   });
 
@@ -20,7 +20,7 @@ frappe.pages["legacy-lab-results"].on_page_load = function (wrapper) {
         <div class="legacy-right">
           <div class="legacy-searchbox">
             <span class="legacy-searchicon">${frappe.utils.icon("search", "sm")}</span>
-            <input class="form-control legacy-search" placeholder="${__("Search test / parameter / result...")}" />
+            <input class="form-control legacy-search" placeholder="${__("Search vital / result / UOM...")}" />
             <button class="btn btn-default btn-sm legacy-clear" title="${__("Clear")}">
               ${frappe.utils.icon("close", "sm")}
             </button>
@@ -45,25 +45,24 @@ frappe.pages["legacy-lab-results"].on_page_load = function (wrapper) {
           </div>
 
           <div class="legacy-meta-item">
-            <div class="legacy-meta-label">${__("Last Result Date")}</div>
+            <div class="legacy-meta-label">${__("Last Recorded")}</div>
             <div class="legacy-meta-value legacy-lastdate"></div>
           </div>
 
-		  <div class="legacy-meta-item">
-			<div class="legacy-meta-label">${__("Legacy Name")}</div>
-			<div class="legacy-meta-value legacy-name"></div>
-			</div>
+          <div class="legacy-meta-item">
+            <div class="legacy-meta-label">${__("Name")}</div>
+            <div class="legacy-meta-value legacy-name"></div>
+          </div>
 
-			<div class="legacy-meta-item">
-			<div class="legacy-meta-label">${__("Gender")}</div>
-			<div class="legacy-meta-value legacy-gender"></div>
-			</div>
+          <div class="legacy-meta-item">
+            <div class="legacy-meta-label">${__("Gender")}</div>
+            <div class="legacy-meta-value legacy-gender"></div>
+          </div>
 
-			<div class="legacy-meta-item">
-			<div class="legacy-meta-label">${__("Birth Date")}</div>
-			<div class="legacy-meta-value legacy-dob"></div>
-			</div>
-
+          <div class="legacy-meta-item">
+            <div class="legacy-meta-label">${__("Birth Date")}</div>
+            <div class="legacy-meta-value legacy-dob"></div>
+          </div>
         </div>
       </div>
 
@@ -90,14 +89,8 @@ frappe.pages["legacy-lab-results"].on_page_load = function (wrapper) {
 
       .legacy-right { display:flex; gap:10px; align-items:center; }
 
-      .legacy-searchbox {
-        position: relative;
-        width: min(460px, 52vw);
-      }
-      .legacy-search {
-        padding-left: 36px;
-        padding-right: 36px;
-      }
+      .legacy-searchbox { position: relative; width: min(460px, 52vw); }
+      .legacy-search { padding-left: 36px; padding-right: 36px; }
       .legacy-searchicon {
         position:absolute; left: 10px; top: 50%; transform: translateY(-50%);
         opacity: .65;
@@ -157,7 +150,6 @@ frappe.pages["legacy-lab-results"].on_page_load = function (wrapper) {
         background: var(--control-bg, #fafafa);
         z-index: 1;
         font-size: 12px;
-        text-transform: none;
       }
 
       .legacy-table th, .legacy-table td {
@@ -180,18 +172,6 @@ frappe.pages["legacy-lab-results"].on_page_load = function (wrapper) {
         white-space: nowrap;
       }
 
-      .legacy-flag {
-        display:inline-block;
-        padding: 1px 8px;
-        border-radius: 999px;
-        font-size: 12px;
-        border: 1px solid var(--border-color, #e6e6e6);
-        background: var(--control-bg, #f7f7f7);
-        margin-left: 8px;
-      }
-      .legacy-flag.high { border-color: rgba(255,0,0,.25); }
-      .legacy-flag.low  { border-color: rgba(0,0,255,.25); }
-
       .legacy-empty {
         padding: 18px;
         border: 1px dashed var(--border-color, #ddd);
@@ -201,7 +181,6 @@ frappe.pages["legacy-lab-results"].on_page_load = function (wrapper) {
     </style>
   `);
 
-  // URL params
   const params = new URLSearchParams(window.location.search);
   const patient = params.get("patient");
   const encounter = params.get("encounter");
@@ -210,16 +189,19 @@ frappe.pages["legacy-lab-results"].on_page_load = function (wrapper) {
     rows: [],
     filtered: [],
     collapsed: {}, // date -> bool
-    loading: false,
   };
+
+  function safe(x) {
+    return frappe.utils.escape_html(x || "");
+  }
 
   function fmtDate(dt) {
     if (!dt) return "";
     return frappe.datetime.str_to_user(dt);
   }
 
-  function safe(x) {
-    return frappe.utils.escape_html(x || "");
+  function getRowDT(r) {
+    return r.DateRecorded || r.ServiceDate || "";
   }
 
   function setStats() {
@@ -227,7 +209,7 @@ frappe.pages["legacy-lab-results"].on_page_load = function (wrapper) {
     const shown = state.filtered.length || 0;
     const q = ($root.find(".legacy-search").val() || "").trim();
 
-    let txt = total ? __("Showing {0} of {1} results", [shown, total]) : __("No results");
+    let txt = total ? __("Showing {0} of {1} entries", [shown, total]) : __("No results");
     if (q) txt += " · " + __("Filtered by: {0}", [q]);
     $root.find(".legacy-stats").text(txt);
   }
@@ -235,7 +217,9 @@ frappe.pages["legacy-lab-results"].on_page_load = function (wrapper) {
   function groupByDate(rows) {
     const map = {};
     for (const r of rows) {
-      const d = (r.DatePerformed || "").slice(0, 10); // YYYY-MM-DD
+      const dt = getRowDT(r);
+      const d = (dt || "").slice(0, 10); // YYYY-MM-DD
+      if (!d) continue;
       map[d] = map[d] || [];
       map[d].push(r);
     }
@@ -245,56 +229,6 @@ frappe.pages["legacy-lab-results"].on_page_load = function (wrapper) {
       .map((k) => ({ date: k, rows: map[k] }));
   }
 
-  // Parse reference formats:
-  // "10-14s" -> {min:10,max:14}
-  // "<5.0mg/dl" -> {lt:5}
-  // ">3.0" -> {gt:3}
-  function parseReference(ref) {
-    ref = (ref || "").toString().trim();
-    if (!ref || ref === "-----") return null;
-
-    const lt = ref.match(/^\s*<\s*([0-9]+(?:\.[0-9]+)?)/);
-    if (lt) return { lt: parseFloat(lt[1]) };
-
-    const gt = ref.match(/^\s*>\s*([0-9]+(?:\.[0-9]+)?)/);
-    if (gt) return { gt: parseFloat(gt[1]) };
-
-    const range = ref.match(/([0-9]+(?:\.[0-9]+)?)\s*-\s*([0-9]+(?:\.[0-9]+)?)/);
-    if (range) return { min: parseFloat(range[1]), max: parseFloat(range[2]) };
-
-    return null;
-  }
-
-  function parseResultNumber(val) {
-    val = (val || "").toString().trim();
-    // Extract first number found
-    const m = val.match(/-?\d+(?:\.\d+)?/);
-    if (!m) return null;
-    const n = parseFloat(m[0]);
-    return Number.isFinite(n) ? n : null;
-  }
-
-  function getFlag(resultVal, refVal) {
-    const n = parseResultNumber(resultVal);
-    const ref = parseReference(refVal);
-    if (n == null || !ref) return null;
-
-    if (ref.min != null && ref.max != null) {
-      if (n < ref.min) return { type: "low", label: __("L") };
-      if (n > ref.max) return { type: "high", label: __("H") };
-      return null;
-    }
-    if (ref.lt != null) {
-      if (n >= ref.lt) return { type: "high", label: __("H") };
-      return null;
-    }
-    if (ref.gt != null) {
-      if (n <= ref.gt) return { type: "low", label: __("L") };
-      return null;
-    }
-    return null;
-  }
-
   function render() {
     const $content = $root.find(".legacy-content");
     const rows = state.filtered;
@@ -302,7 +236,7 @@ frappe.pages["legacy-lab-results"].on_page_load = function (wrapper) {
     setStats();
 
     if (!rows.length) {
-      $content.html(`<div class="legacy-empty">${__("No legacy lab results found.")}</div>`);
+      $content.html(`<div class="legacy-empty">${__("No legacy vitals found.")}</div>`);
       return;
     }
 
@@ -315,22 +249,26 @@ frappe.pages["legacy-lab-results"].on_page_load = function (wrapper) {
 
         const body = g.rows
           .map((r) => {
-            const flag = getFlag(r.LabTestResults, r.Reference);
-            const flagHtml = flag
-              ? `<span class="legacy-flag ${flag.type}" title="${__("Out of reference")}">${safe(flag.label)}</span>`
-              : "";
+            const dt = getRowDT(r);
+            const vital = r.VitalStatistic || "";
+            const res = r.Result || "";
+            const uom = r.VitalUOM || "";
+            const remark = r.Remark || "";
+            const ref = r.ServiceReference || "";
+            const sdate = r.ServiceDate || "";
 
             return `
               <tr>
-                <td style="white-space:nowrap">${fmtDate(r.DatePerformed)}</td>
+                <td style="white-space:nowrap">${fmtDate(dt)}</td>
                 <td>
-                  <div><b>${safe(r.ProcedureID)}</b></div>
-                  <div class="legacy-muted">${safe(r.ParameterID)}</div>
+                  <div><b>${safe(vital)}</b></div>
+                  ${remark ? `<div class="legacy-muted">${safe(remark)}</div>` : ``}
                 </td>
-                <td>${safe(r.LabTestResults)} ${flagHtml}</td>
-                <td>${safe(r.Reference)}</td>
-                <td>${safe(r.DoctorName)}</td>
-                <td><span class="legacy-pill">${safe(r.PatientStatus)}</span></td>
+                <td style="white-space:nowrap">
+                  <span class="legacy-pill">${safe(res)}${uom ? ` ${safe(uom)}` : ""}</span>
+                </td>
+                <td style="white-space:nowrap">${safe(ref)}</td>
+                <td style="white-space:nowrap">${fmtDate(sdate)}</td>
               </tr>
             `;
           })
@@ -341,7 +279,7 @@ frappe.pages["legacy-lab-results"].on_page_load = function (wrapper) {
             <div class="legacy-group-head">
               <div class="legacy-group-title">${safe(g.date)}</div>
               <div class="legacy-group-meta">
-                <span>${__("{0} tests", [count])}</span>
+                <span>${__("{0} entries", [count])}</span>
                 <span class="legacy-chevron">${frappe.utils.icon("chevron-down", "sm")}</span>
               </div>
             </div>
@@ -352,11 +290,10 @@ frappe.pages["legacy-lab-results"].on_page_load = function (wrapper) {
                   <thead>
                     <tr>
                       <th style="width:190px">${__("Date/Time")}</th>
-                      <th>${__("Test")}</th>
-                      <th style="width:190px">${__("Result")}</th>
-                      <th style="width:190px">${__("Reference")}</th>
-                      <th style="width:260px">${__("Doctor")}</th>
-                      <th style="width:140px">${__("Status")}</th>
+                      <th>${__("Vital")}</th>
+                      <th style="width:210px">${__("Result")}</th>
+                      <th style="width:210px">${__("Service Ref")}</th>
+                      <th style="width:190px">${__("Service Date")}</th>
                     </tr>
                   </thead>
                   <tbody>${body}</tbody>
@@ -373,8 +310,6 @@ frappe.pages["legacy-lab-results"].on_page_load = function (wrapper) {
 
   function applySearch(q) {
     q = (q || "").trim().toLowerCase();
-
-    // show/hide clear button
     $root.find(".legacy-clear").toggle(!!q);
 
     if (!q) {
@@ -385,13 +320,13 @@ frappe.pages["legacy-lab-results"].on_page_load = function (wrapper) {
 
     state.filtered = state.rows.filter((r) => {
       const hay = [
-        r.DatePerformed,
-        r.ProcedureID,
-        r.ParameterID,
-        r.LabTestResults,
-        r.Reference,
-        r.DoctorName,
-        r.PatientStatus,
+        r.DateRecorded,
+        r.ServiceDate,
+        r.VitalStatistic,
+        r.Result,
+        r.VitalUOM,
+        r.Remark,
+        r.ServiceReference,
       ]
         .join(" ")
         .toLowerCase();
@@ -411,19 +346,20 @@ frappe.pages["legacy-lab-results"].on_page_load = function (wrapper) {
   async function load(refresh_cache = 0) {
     $root.find(".legacy-subtitle").text(encounter ? __("From Encounter: {0}", [encounter]) : "");
 
-    // meta placeholders
     $root.find(".legacy-patient").text(patient || "-");
     $root.find(".legacy-legacyid").text("-");
     $root.find(".legacy-lastdate").text("-");
-
+    $root.find(".legacy-name").text("-");
+    $root.find(".legacy-gender").text("-");
+    $root.find(".legacy-dob").text("-");
 
     $root.find(".legacy-content").html(`<div class="legacy-empty">${__("Loading...")}</div>`);
 
     const r = await frappe.call({
-      method: "his.legacy.legacy_labs.get_legacy_labs",
-      args: { patient, limit: 800, refresh_cache },
+      method: "his.legacy.legacy_vitals.get_legacy_vitals",
+      args: { patient, limit: 1200, refresh_cache },
       freeze: true,
-      freeze_message: __("Fetching legacy lab results..."),
+      freeze_message: __("Fetching legacy vitals..."),
     });
 
     const data = r.message || {};
@@ -437,31 +373,27 @@ frappe.pages["legacy-lab-results"].on_page_load = function (wrapper) {
     state.filtered = [...rows];
 
     $root.find(".legacy-legacyid").text(data.legacy_patient_number || "-");
-    $root.find(".legacy-lastdate").text(rows[0]?.DatePerformed ? fmtDate(rows[0].DatePerformed) : "-");
-	const meta = data.patient_meta || {};
-	$root.find(".legacy-name").text(meta.PatientName || "-");
-	$root.find(".legacy-gender").text(meta.Gender || "-");
-	$root.find(".legacy-dob").text(meta.BirthDate ? fmtDate(meta.BirthDate) : "-");
 
-    // after load: keep current search (if any) applied
-    const q = $root.find(".legacy-search").val() || "";
-    applySearch(q);
+    const first_dt = rows[0] ? (rows[0].DateRecorded || rows[0].ServiceDate) : "";
+    $root.find(".legacy-lastdate").text(first_dt ? fmtDate(first_dt) : "-");
 
-    // render happens inside applySearch
+    const meta = data.patient_meta || {};
+    $root.find(".legacy-name").text(meta.PatientName || "-");
+    $root.find(".legacy-gender").text(meta.Gender || "-");
+    $root.find(".legacy-dob").text(meta.BirthDate ? fmtDate(meta.BirthDate) : "-");
+
+    applySearch($root.find(".legacy-search").val() || "");
   }
 
   // Events
   $root.on("input", ".legacy-search", (e) => applySearch(e.target.value));
-
   $root.on("click", ".legacy-clear", () => clearSearch());
-
   $root.on("click", ".legacy-refresh", () => {
-    clearSearch();  // you asked: refresh should clear search too
-    state.collapsed = {}; // optional: expand all after refresh
+    clearSearch();
+    state.collapsed = {};
     load(1);
   });
 
-  // collapse/expand date groups
   $root.on("click", ".legacy-group-head", function () {
     const $g = $(this).closest(".legacy-group");
     const date = $g.attr("data-date");

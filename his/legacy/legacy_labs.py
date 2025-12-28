@@ -1,3 +1,5 @@
+# his/his/legacy/legacy_labs.py
+
 import frappe
 from .smartfinancial import fetch_patient_labs, fetch_patient_meta
 
