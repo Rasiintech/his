@@ -49,8 +49,11 @@
    "mandatory_depends_on": "eval:doc.link_existing_item",
    "no_copy": 1,
    "options": "Item",
+<<<<<<< Updated upstream
    "read_only": 1,
    "read_only_depends_on": "eval: !doc.__islocal",
+=======
+>>>>>>> Stashed changes
    "search_index": 1
   },
   {
@@ -179,7 +182,11 @@
   }
  ],
  "links": [],
+<<<<<<< Updated upstream
  "modified": "2025-12-28 12:02:35.030602",
+=======
+ "modified": "2025-12-25 18:45:36.899262",
+>>>>>>> Stashed changes
  "modified_by": "Administrator",
  "module": "HIS",
  "name": "Other Service",
