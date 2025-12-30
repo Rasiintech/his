@@ -13,6 +13,9 @@
   "sex",
   "column_break_5whwr",
   "date",
+  "practitioner",
+  "procedure_template",
+  "anaesthetist",
   "anaesthetist_name",
   "anaesthetic_assistant",
   "s",
@@ -51,17 +54,26 @@
   "heel_pad",
   "head_ring",
   "others",
+  "investigations",
+  "consent_form",
+  "anesthesia_type",
+  "fit_to_surgery",
   "section_break_u4si6",
   "throat_pack",
   "in",
   "out",
   "section_break_0fcqq",
   "vi",
-  "section_break_zoxv8",
-  "drugs",
   "section_break_ungap",
   "post_operative_instructions",
+  "anesthesia_package_tab",
+  "section_break_evdem",
+  "packages_prescription",
+  "sales_order",
+  "patient_encounter",
   "billible_tab",
+  "section_break_zoxv8",
+  "drugs",
   "procedure_items",
   "amended_from"
  ],
@@ -73,6 +85,7 @@
    "in_standard_filter": 1,
    "label": "Patient",
    "options": "Patient",
+   "read_only": 1,
    "reqd": 1
   },
   {
@@ -81,7 +94,8 @@
    "fieldtype": "Data",
    "in_list_view": 1,
    "in_standard_filter": 1,
-   "label": "Patient Name"
+   "label": "Patient Name",
+   "read_only": 1
   },
   {
    "fetch_from": "patient.sex",
@@ -89,7 +103,8 @@
    "fieldtype": "Data",
    "in_list_view": 1,
    "in_standard_filter": 1,
-   "label": "Sex"
+   "label": "Sex",
+   "read_only": 1
   },
   {
    "fieldname": "column_break_5whwr",
@@ -101,7 +116,8 @@
    "fieldtype": "Date",
    "in_list_view": 1,
    "in_standard_filter": 1,
-   "label": "Date"
+   "label": "Date",
+   "read_only": 1
   },
   {
    "fieldname": "general_condition",
@@ -321,18 +337,15 @@
    "label": "Out"
   },
   {
-   "fieldname": "anaesthetist_name",
-   "fieldtype": "Data",
-   "label": "Anaesthetist Name"
-  },
-  {
    "fieldname": "anaesthetic_assistant",
    "fieldtype": "Data",
-   "label": "Anaesthetic Assistant"
+   "label": "Anaesthetic Assistant",
+   "read_only": 1
   },
   {
    "fieldname": "section_break_0fcqq",
-   "fieldtype": "Section Break"
+   "fieldtype": "Section Break",
+   "label": "Vital Signs"
   },
   {
    "fieldname": "vi",
@@ -362,6 +375,7 @@
   {
    "fieldname": "billible_tab",
    "fieldtype": "Tab Break",
+   "hidden": 1,
    "label": "Billible"
   },
   {
@@ -378,12 +392,94 @@
    "options": "Anesthesia",
    "print_hide": 1,
    "read_only": 1
+  },
+  {
+   "fieldname": "anesthesia_package_tab",
+   "fieldtype": "Tab Break",
+   "label": "Anesthesia Package"
+  },
+  {
+   "fieldname": "section_break_evdem",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "packages_prescription",
+   "fieldtype": "Table",
+   "label": "Packages Prescription",
+   "options": "Packages Prescription"
+  },
+  {
+   "fieldname": "anaesthetist",
+   "fieldtype": "Link",
+   "label": "Anaesthetist",
+   "options": "Employee"
+  },
+  {
+   "fetch_from": "anaesthetist.employee_name",
+   "fieldname": "anaesthetist_name",
+   "fieldtype": "Data",
+   "label": "Anaesthetist Name",
+   "read_only": 1
+  },
+  {
+   "fieldname": "practitioner",
+   "fieldtype": "Link",
+   "label": "Practitioner",
+   "options": "Healthcare Practitioner",
+   "read_only": 1
+  },
+  {
+   "fieldname": "sales_order",
+   "fieldtype": "Link",
+   "label": "Sales Order",
+   "options": "Sales Order"
+  },
+  {
+   "fieldname": "fit_to_surgery",
+   "fieldtype": "Select",
+   "label": "Fit To Surgery",
+   "options": "\nYes\nNo",
+   "reqd": 1
+  },
+  {
+   "fieldname": "procedure_template",
+   "fieldtype": "Link",
+   "label": "Surgery",
+   "options": "Clinical Procedure Template",
+   "read_only": 1
+  },
+  {
+   "fieldname": "anesthesia_type",
+   "fieldtype": "Select",
+   "label": "Anesthesia Type",
+   "options": "\nGA\nLocal\nSpinal\nEpidural\nPeripheral Nerve Block",
+   "reqd": 1
+  },
+  {
+   "fieldname": "consent_form",
+   "fieldtype": "Select",
+   "label": "Consent Form",
+   "options": "\nYes\nNo",
+   "reqd": 1
+  },
+  {
+   "fieldname": "investigations",
+   "fieldtype": "Select",
+   "label": "Investigations",
+   "options": "\nYes\nNo",
+   "reqd": 1
+  },
+  {
+   "fieldname": "patient_encounter",
+   "fieldtype": "Link",
+   "label": "Patient Encounter",
+   "options": "Patient Encounter"
   }
  ],
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2023-06-22 16:16:01.499224",
+ "modified": "2025-12-29 15:41:34.786541",
  "modified_by": "Administrator",
  "module": "HIS",
  "name": "Anesthesia",
@@ -403,7 +499,7 @@
    "write": 1
   },
   {
-   "create": 1,
+   "cancel": 1,
    "delete": 1,
    "email": 1,
    "export": 1,

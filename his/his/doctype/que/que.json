@@ -118,6 +118,7 @@
    "fieldtype": "Date",
    "in_standard_filter": 1,
    "label": "Date",
+   "search_index": 1,
    "set_only_once": 1
   },
   {
@@ -261,7 +262,8 @@
    "ignore_user_permissions": 1,
    "label": "Employee",
    "mandatory_depends_on": "bill_to_employee",
-   "options": "Employee"
+   "options": "Employee",
+   "search_index": 1
   },
   {
    "allow_in_quick_entry": 1,
@@ -271,7 +273,8 @@
    "in_standard_filter": 1,
    "label": "Patient",
    "options": "Patient",
-   "reqd": 1
+   "reqd": 1,
+   "search_index": 1
   },
   {
    "allow_in_quick_entry": 1,
@@ -280,7 +283,8 @@
    "in_list_view": 1,
    "label": "Practitioner",
    "options": "Healthcare Practitioner",
-   "reqd": 1
+   "reqd": 1,
+   "search_index": 1
   },
   {
    "bold": 1,
@@ -304,7 +308,8 @@
    "fieldtype": "Select",
    "label": "Type",
    "mandatory_depends_on": "eval: doc.department == 'OBS AND GYN'",
-   "options": "\nOBS\nGYN"
+   "options": "\nOBS\nGYN",
+   "search_index": 1
   },
   {
    "fieldname": "obs",
@@ -324,7 +329,8 @@
    "fetch_from": "patient.mobile",
    "fieldname": "mobile",
    "fieldtype": "Data",
-   "label": "Mobile"
+   "label": "Mobile",
+   "search_index": 1
   },
   {
    "fieldname": "sales_order",
@@ -475,7 +481,7 @@
    "link_fieldname": "patient"
   }
  ],
- "modified": "2025-12-27 14:59:39.176032",
+ "modified": "2025-12-28 11:55:36.178281",
  "modified_by": "Administrator",
  "module": "HIS",
  "name": "Que",

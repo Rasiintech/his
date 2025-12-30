@@ -259,6 +259,13 @@ doc_events = {
     "Purchase Invoice" : {
         # "on_submit" : "his.api.retail_setup.purchase_invoice_retail",
     },
+
+    "Anesthesia": {   # IMPORTANT: must match your DocType name exactly
+        "on_submit": "his.api.anaesthesia_billing.enqueue_anaesthesia_sales_order",
+        "on_update_after_submit": "his.api.anaesthesia_billing.enqueue_anaesthesia_sales_order",
+        # optional:
+        "on_cancel": "his.api.anaesthesia_billing.cancel_anaesthesia_sales_order",
+    }
     # "Patient Encounter" : {
     #   "before_save" : "his.api.patient_encounter.close_que_after_save_pe",
     # }
