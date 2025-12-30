@@ -1,11 +1,7 @@
 {
  "absolute_value": 0,
  "align_labels_right": 0,
-<<<<<<< Updated upstream
- "creation": "2025-12-24 11:49:57.474054",
-=======
  "creation": "2025-12-22 10:51:35.583412",
->>>>>>> Stashed changes
  "css": "",
  "custom_format": 1,
  "default_print_language": "en",
@@ -21,11 +17,7 @@
  "margin_left": 15.0,
  "margin_right": 15.0,
  "margin_top": 15.0,
-<<<<<<< Updated upstream
- "modified": "2025-12-29 15:20:47.791917",
-=======
  "modified": "2025-12-24 14:13:48.524731",
->>>>>>> Stashed changes
  "modified_by": "Administrator",
  "module": "HIS",
  "name": "Consent Surgery Format",
